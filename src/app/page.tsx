@@ -62,9 +62,10 @@ export default function HomePage() {
             <span className="text-lg font-bold text-primary tracking-tight">SecureKYC</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/admin/login" className="text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">
-              Admin
-            </Link>
+            <a href="/admin/login" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-lg border border-outline-variant/30 text-xs font-semibold text-on-surface-variant hover:text-primary hover:border-primary/40 transition-all">
+              <span className="material-symbols-outlined text-[14px]" style={{fontVariationSettings:"'FILL' 1"}}>admin_panel_settings</span>
+              Admin Panel
+            </a>
             <a href="#faqs" className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
               FAQs
             </a>
