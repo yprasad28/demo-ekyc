@@ -1,0 +1,102 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+enum KYCStatus {
+  PENDING
+  IN_PROGRESS
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum DocType {
+  AADHAAR
+  PAN
+  PHOTO
+  SIGNATURE
+}
+
+model Customer {
+  id             String          @id @default(uuid())
+  mobile         String          @unique
+  email          String?
+  role           String          @default("CUSTOMER")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  kycApplication KycApplication?
+
+  @@map("customers")
+}
+
+model KycApplication {
+  id              String     @id @default(uuid())
+  customerId      String     @unique
+  customer        Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status          KYCStatus  @default(PENDING)
+  currentStep     Int        @default(1)
+  
+  // Aadhaar verified data
+  aadhaarNumber   String?
+  aadhaarName     String?
+  aadhaarDob      String?
+  aadhaarGender   String?
+  aadhaarAddress  String?
+  aadhaarPhoto    String?    // Base64 or URL
+
+  // PAN verified data
+  panNumber       String?
+  panName         String?
+  panDob          String?
+  panType         String?
+  panMatchScore   Float?
+  panStatus       String?
+
+  rejectionReason String?
+  submittedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  documents       Document[]
+
+  @@map("kyc_applications")
+}
+
+model Document {
+  id            String         @id @default(uuid())
+  applicationId String
+  application   KycApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          DocType
+  fileUrl       String
+  fileName      String?
+  uploadedAt    DateTime       @default(now())
+
+  @@map("documents")
+}
+
+model ConsentLog {
+  id           String   @id @default(uuid())
+  customerId   String?
+  type         String   // e.g. "MOBILE_OTP", "AADHAAR_UIDAI"
+  consentGiven Boolean  @default(true)
+  ipAddress    String
+  userAgent    String?
+  timestamp    DateTime @default(now())
+
+  @@map("consent_logs")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  // admin or customer ID
+  action    String   // e.g. "OTP_SENT", "APPLICATION_APPROVED"
+  details   String?
+  ipAddress String
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}

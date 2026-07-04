@@ -1,0 +1,86 @@
+[
+  {
+    "screenId": "ef70bfdfe20d4a85b66f9a3d8ee22774",
+    "label": "Welcome (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLuWtJig8DbjVnpUCYwfFAs4hAssVQzpDz5OGhDt6I3SD9NkK2sJAs4UuuPl_lr7cq7MyThPWEniEfQ2I7LxrqFL-_U3sm1jcxJBVjfM6iUALx6p6hzd_9EOTuPXMKERhMGxFgDV_WeBysBFBXYenHrzrCLikW0LO1iMDpDWG4h0rNZgGI8v3GKymQ6xK0KZ5HCKw2wiDplOyzmmiUrOwrGp_BiJuXc9_SPTidakW2ncPkK8cWxLpjHj6g",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\01-welcome.png",
+    "success": true
+  },
+  {
+    "screenId": "584314de1a2f4dca8e40664ea5d84448",
+    "label": "Mobile Entry (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLtdy5TFWqlgJCUUYZ-mkzrG7H_5navZy3oHaKMs-ib1c2KcHmg-aGwo4ryQAZULoItiSBWRV5CXuLhjDRMxc4aoj4ct4zCyuvEeuyeub75bxr4BNxJEg1AQCNqeENF1HbjOynKuZSiXlb9I7oZm4fF5GSj7JtTsU-By_fC2TQP8Ud7pJAsnaKSIfrlWP7_NdzOiBFlV5IgaRSW-34clD4OKwnQzxY4SSjawQO_KQxjkj76APh_BF91v",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\02-mobile-entry.png",
+    "success": true
+  },
+  {
+    "screenId": "ddde7f6aa9a1454faf0a3d77261435d2",
+    "label": "OTP Verification (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLuV7vYZRpNZMXlRk9Qsfg-kSTmsxI5XmUnF6j0SieL0VgCaUO-nBO0wcHHCrVxQ73kSsv_K5xGWMmA8-xPNgzwY5jGKVO-nCKt2SLk58qtId9sfChExPvBwH6eebi5aseFWDRw9AQApO3WGn2d67k5wHsearAfQ1l802sjxkoDV55u3M5lF3HB5aUgK7KdtThAIIj5-WpIyMa9z50ERkeMjHdak1fETIbefXhw_tLGk8ubTdILMoqC-2w",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\03-otp-verification.png",
+    "success": true
+  },
+  {
+    "screenId": "1f25892e4835414a91b31936a8163d88",
+    "label": "PAN Verification (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLuPJ_widpJ4S-qRpGtOUhzwZckjii7mnmRbnJG9xbNd-olVwDGj4vtZsHtjnJDAB6K1q0_71BaREzbfFneBp4_l0HcJZp-b878R9hbI-mDEw4r9hMoi_F9kK5wmhpP0JMA6uvDcZtMx2_I7814lPnnqv1Vh0M-O3FYTsZ81OlyCbrbUeiytlfECAeiQUEZ_Fb16I0kQCdphIyR4MFWKKpblBrqwtzwQyHWowuTNdnyKjk7hiF0yjablKA",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\04-pan-verification.png",
+    "success": true
+  },
+  {
+    "screenId": "65644a3246524129bfa903204eddf834",
+    "label": "Name Matching Result",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLtKuVHhRNBJh8J2GhPL0f0KV6MBTVO1kMZZE96HOeML6yRM6lulFg8-5_euioulnxdC1qQsA_KRBRDTpas1klS1H_5rzPxhc2vWi1YsVkN7coobOfP2lokC8K7YYdm-vQeGu5SLa42Agy075JuhutCPBo2zlv_2vvWuf9JLKS63PXW0rVdJeqGSk2MWzjmV5PcfsIRL2jVSJHcJstbywto2TjBTz1h6KjpvAiInjOeYY5nZobRqwI_3hA",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\05-name-matching.png",
+    "success": true
+  },
+  {
+    "screenId": "8a8839451c8949759714824d309014cb",
+    "label": "PAN Scan (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLt1xWtcVgA6dKbXMUoAFqlPDj-PUaqnHv8_p0ecArMMVrdECwqAmFyig-dFCP2KAjlCZUvDnTrjLgsTgnbSSjZBdFyZ5iAqXqMNyBl1ms3xRO2lV7NDaRPgNa-6AEkiFaNHGcVY-C33LDg-kOd4I_VGBI7CLgj309Xjv-ZGK9m41fr_5aTXwzafZUdnL8eDvaOH4s6-FcZVeTyEVYxD96f3-px5ByKHTO8fNDA70Zdf9C9JcWgeho4cuw",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\06-pan-scan.png",
+    "success": true
+  },
+  {
+    "screenId": "045cf5617f794ff89ebfbc082a1bb01f",
+    "label": "Aadhaar XML Upload",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLvkciFuYjOaGUp2IlZov3RZM-FCfQwgap6OrSSu06_yclKhOQUfTyO4Jntud2r_Luxao2H8XfyxCLhWH39iol1hnlN-W4PFkt9iy9ZVCOZDDxFYDQUlq06dVmvuomPa1xjMaYuxf17g6gmGelqrPnRSjD586IBlakDiBTJMcBNVlPMfOfWkYl7o3DJLsVSn19zFJkkvRh_g3t1novY_b8dkvsujzGgGvmjp4rjoQfPyIlSlKaF3eJbcOA",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\07-aadhaar-xml-upload.png",
+    "success": true
+  },
+  {
+    "screenId": "54b5466cd30946b5bc36aad412fa283f",
+    "label": "Aadhaar Verification (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLs9ejnzX1KQXZMlpy9vlvUSRIT6Q3cwRHF0I2R76BF1LWpq7iDVxYmAVm0cyy6PDUy_-OgNITFvo9bQiL7Cg9flI2JB9wyL1zi2Io7W_bLlg7qT4LTjinybRnQxqSCF14lvWT-r1Xf_EzQ4tmDjPc2utKV1g-5Ppkswnzzva6XxQwxuAIpxi5GFzr7njHjH2y1Toa4KWfG9jNLOX2gHVtWIqX0i-nQYLKYOLFMSMsI8nBcZsTqpHDWmrw",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\08-aadhaar-verification.png",
+    "success": true
+  },
+  {
+    "screenId": "ad21984a0cf844bfa9f13ee94a86ecd9",
+    "label": "Duplicate PAN Error",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLssPq1I9Hl1Zyw6bvdSHgrGuvGqHw0qr1sVGO6pOisuczkaFqvauVcX0zCnuveu_2tKDvtTxXKn8bDOwIu1JOeQJ-d4PAPwrUar26l9n52qU5KpXUFqQriFsfxEdmWlv_HndBhg6Uc_ViVj56omXzHt6Iy9L511VtPsWU3LXYcEH_1Rfxofxbxy8jhvjFMQo3bzsYuxwjKoJUH7QFlNA-jmLGKnP6G4vDkL8N0ifhUX49epWMWgsPHmCQ",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\09-duplicate-pan-error.png",
+    "success": true
+  },
+  {
+    "screenId": "db3f439cfe4a4f37b14835b376d1f9d2",
+    "label": "Aadhaar QR Scan (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLvwyWNl-_UOQ6cKvUxLXG6xVAeos11xXpSoSpvXfPORVq4NxK2CuA3UeG8KTRLQJhceT3NtbIIcphXsH1bBCaeGE9B9Gv7sj79JqN2qP3DUgoWqnsoqV_EFjH-5Zzu4EVkmyMJNZkgjVLrl26uF1awzniTJmwWuHX4nyq_g2VrSXjLbRzVCb6EM1_5ZhLlEk1fHMVLlcB0fo7IO57ze10tJNAMKnRqulT14vInvNe_RctGESv7f6G2R",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\10-aadhaar-qr-scan.png",
+    "success": true
+  },
+  {
+    "screenId": "43a00fcdbf414aaeb1b285f174820442",
+    "label": "KYC Complete (Desktop)",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLsyGEcjvod3Jg_e7HoTAL4Un_5Jn_4kbqqZmyfNV5ULTQz5dRaN6f4XRG_So1_o3tQgaZHa20m31lU8lOHsPJfXZq3mskJbbsspxX8PVheHU4W4GpQeJB6r9bqsm1z8F_jI_dvuZdlLniWg2zaAujtRjLHneJAOnLVe1NfDvFRrYJAfi4S-Ed0L0Q3crgLztj0uSJrTjjjEOXlKU4XMTa3_sM2e3F4bb8PVyKgWSgH7tet8u_y9Vk5h",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\11-kyc-complete.png",
+    "success": true
+  },
+  {
+    "screenId": "80d0d6b610be4ed98d155c070546ffc7",
+    "label": "Review & Edit Details",
+    "imageUrl": "https://lh3.googleusercontent.com/aida/AP1WRLuJHqv5DgnihmxtxsDUS7KY0YJngHDVJBfv5uH-pgGEsWJ8OeGINZeYzazCj1qRRmAdrMBHS9_UXDKmMCU6D6mnJsPEHRLNdNEEXp-U6jUZV9yhxahzyFbbvjZFWJ5b-rpgEXUA9AFRjSmEPa7PM1HUcSM4fOIEq8dqb7urE77BcAVA16nr49yFIVaqn84mzy8bsWUblFwmFhBdudCVSJgRXv7AzGmLOUfwYpjZjXeikaHNe1chkl1O",
+    "savedPath": "D:\\Demo-ekyc\\public\\design-screens\\12-review-edit-details.png",
+    "success": true
+  }
+]
