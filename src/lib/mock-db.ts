@@ -3,6 +3,8 @@ import path from 'path';
 
 // Define DB path inside workspace
 const DB_FILE = path.join(process.cwd(), 'mock-db.json');
+let memoryDb: MockSchema | null = null;
+let fileAvailable: boolean | null = null;
 
 export interface CustomerMock {
   id: string;
@@ -72,36 +74,67 @@ interface MockSchema {
   audit_logs: AuditLogMock[];
 }
 
+function createEmptyDb(): MockSchema {
+  return {
+    customers: [],
+    kyc_applications: [],
+    documents: [],
+    consent_logs: [],
+    audit_logs: []
+  };
+}
+
 function initDb(): MockSchema {
+  // Already determined filesystem is read-only — use in-memory
+  if (fileAvailable === false) {
+    if (!memoryDb) memoryDb = createEmptyDb();
+    return memoryDb;
+  }
+
+  // Try file-based storage
   if (!fs.existsSync(DB_FILE)) {
-    const defaultDb: MockSchema = {
-      customers: [],
-      kyc_applications: [],
-      documents: [],
-      consent_logs: [],
-      audit_logs: []
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf-8');
-    return defaultDb;
+    const defaultDb = createEmptyDb();
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf-8');
+      fileAvailable = true;
+      return defaultDb;
+    } catch {
+      // Vercel serverless or read-only filesystem — fall back to memory
+      fileAvailable = false;
+      memoryDb = defaultDb;
+      return memoryDb;
+    }
   }
   try {
     const content = fs.readFileSync(DB_FILE, 'utf-8');
+    fileAvailable = true;
     return JSON.parse(content);
   } catch {
-    const defaultDb: MockSchema = {
-      customers: [],
-      kyc_applications: [],
-      documents: [],
-      consent_logs: [],
-      audit_logs: []
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf-8');
-    return defaultDb;
+    const defaultDb = createEmptyDb();
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf-8');
+      fileAvailable = true;
+      return defaultDb;
+    } catch {
+      fileAvailable = false;
+      memoryDb = defaultDb;
+      return memoryDb;
+    }
   }
 }
 
 function saveDb(data: MockSchema) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  if (fileAvailable === false) {
+    memoryDb = data;
+    return;
+  }
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch {
+    // Filesystem became read-only (e.g. serverless) — keep in memory
+    fileAvailable = false;
+    memoryDb = data;
+  }
 }
 
 export const mockDb = {
