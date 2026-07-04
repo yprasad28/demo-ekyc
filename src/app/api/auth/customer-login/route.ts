@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "OTP sent successfully.",
-      otp: process.env.NODE_ENV === "development" ? otp : undefined
+      otp,
     });
   } catch (error: unknown) {
     console.error("Error in customer-login:", error);

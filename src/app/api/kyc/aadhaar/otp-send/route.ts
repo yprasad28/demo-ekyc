@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "OTP sent to your Aadhaar-linked mobile number.",
-      otp: process.env.NODE_ENV === "development" ? otp : undefined,
+      otp,
     });
   } catch (error) {
     console.error("Error in aadhaar otp-send:", error);
