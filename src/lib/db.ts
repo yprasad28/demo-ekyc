@@ -3,41 +3,48 @@ import { mockDb } from "./mock-db";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let prisma: any = null;
 let useFallback = true;
+let initPromise: Promise<void> | null = null;
 
-// Initialize Prisma client with Adapter if DATABASE_URL is configured
-if (typeof window === 'undefined') {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (databaseUrl) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PrismaClient } = require("@/generated/client");
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PrismaPg } = require("@prisma/adapter-pg");
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { Pool } = require("pg");
+function ensureInit(): Promise<void> {
+  if (!initPromise) {
+    initPromise = (async () => {
+      if (typeof window !== "undefined") return;
 
-      const pool = new Pool({ 
-        connectionString: databaseUrl,
-        connectionTimeoutMillis: 5000 
-      });
-      const adapter = new PrismaPg(pool);
-      prisma = new PrismaClient({ adapter });
-      useFallback = false;
-      console.log("Prisma PostgreSQL client initialized successfully.");
-    } catch (e) {
-      console.warn("Failed to initialize Prisma client, falling back to local JSON DB:", e);
-      useFallback = true;
-    }
-  } else {
-    console.warn("DATABASE_URL is not set. Using local JSON DB fallback.");
-    useFallback = true;
+      const databaseUrl = process.env.DATABASE_URL;
+      if (!databaseUrl) {
+        console.warn("DATABASE_URL is not set. Using local JSON DB fallback.");
+        return;
+      }
+
+      try {
+        const [{ PrismaClient }, { PrismaPg }, { Pool }] = await Promise.all([
+          import("@/generated/client"),
+          import("@prisma/adapter-pg"),
+          import("pg"),
+        ]);
+
+        const pool = new Pool({
+          connectionString: databaseUrl,
+          connectionTimeoutMillis: 10000,
+        });
+        const adapter = new PrismaPg(pool);
+        prisma = new PrismaClient({ adapter });
+        useFallback = false;
+        console.log("Prisma PostgreSQL client initialized successfully.");
+      } catch (e) {
+        console.warn("Failed to initialize Prisma client, falling back to local JSON DB:", e);
+        useFallback = true;
+      }
+    })();
   }
+  return initPromise;
 }
 
 // Convert schema enums and return models
 export const db = {
   // Customers
   findCustomerByMobile: async (mobile: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.findCustomerByMobile(mobile);
     try {
       return await prisma.customer.findUnique({
@@ -50,6 +57,7 @@ export const db = {
   },
   
   findCustomerById: async (id: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.findCustomerById(id);
     try {
       return await prisma.customer.findUnique({
@@ -62,6 +70,7 @@ export const db = {
   },
 
   createCustomer: async (mobile: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.createCustomer(mobile);
     try {
       return await prisma.customer.create({
@@ -74,6 +83,7 @@ export const db = {
   },
 
   updateCustomerEmail: async (id: string, email: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.updateCustomerEmail(id, email);
     try {
       return await prisma.customer.update({
@@ -88,6 +98,7 @@ export const db = {
 
   // Applications
   findApplicationByCustomerId: async (customerId: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.findApplicationByCustomerId(customerId);
     try {
       return await prisma.kycApplication.findUnique({
@@ -100,6 +111,7 @@ export const db = {
   },
 
   findApplicationById: async (id: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.findApplicationById(id);
     try {
       return await prisma.kycApplication.findUnique({
@@ -112,6 +124,7 @@ export const db = {
   },
 
   createApplication: async (customerId: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.createApplication(customerId);
     try {
       return await prisma.kycApplication.create({
@@ -125,6 +138,7 @@ export const db = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateApplication: async (id: string, updates: any) => {
+    await ensureInit();
     if (useFallback) return mockDb.updateApplication(id, updates);
     try {
       return await prisma.kycApplication.update({
@@ -138,6 +152,7 @@ export const db = {
   },
 
   listApplications: async () => {
+    await ensureInit();
     if (useFallback) return mockDb.listApplications();
     try {
       return await prisma.kycApplication.findMany({
@@ -155,9 +170,9 @@ export const db = {
 
   // Documents
   createDocument: async (applicationId: string, type: 'AADHAAR' | 'PAN' | 'PHOTO' | 'SIGNATURE', fileUrl: string, fileName: string | null) => {
+    await ensureInit();
     if (useFallback) return mockDb.createDocument(applicationId, type, fileUrl, fileName);
     try {
-      // Upsert document to prevent duplicate entries
       const existing = await prisma.document.findFirst({
         where: { applicationId, type }
       });
@@ -177,6 +192,7 @@ export const db = {
   },
 
   findDocumentsByApplicationId: async (applicationId: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.findDocumentsByApplicationId(applicationId);
     try {
       return await prisma.document.findMany({
@@ -190,6 +206,7 @@ export const db = {
 
   // Consent Logs
   createConsentLog: async (customerId: string | null, type: string, consentGiven: boolean, ipAddress: string, userAgent: string | null) => {
+    await ensureInit();
     if (useFallback) return mockDb.createConsentLog(customerId, type, consentGiven, ipAddress, userAgent);
     try {
       return await prisma.consentLog.create({
@@ -203,6 +220,7 @@ export const db = {
 
   // Audit Logs
   createAuditLog: async (userId: string | null, action: string, details: string | null, ipAddress: string) => {
+    await ensureInit();
     if (useFallback) return mockDb.createAuditLog(userId, action, details, ipAddress);
     try {
       return await prisma.auditLog.create({
@@ -215,6 +233,7 @@ export const db = {
   },
 
   listAuditLogs: async () => {
+    await ensureInit();
     if (useFallback) return mockDb.listAuditLogs();
     try {
       return await prisma.auditLog.findMany({
