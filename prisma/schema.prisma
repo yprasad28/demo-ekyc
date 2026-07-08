@@ -25,6 +25,7 @@ enum DocType {
 model Customer {
   id             String          @id @default(uuid())
   mobile         String          @unique
+  mobileHash     String          @unique
   email          String?
   role           String          @default("CUSTOMER")
   createdAt      DateTime        @default(now())

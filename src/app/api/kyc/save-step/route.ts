@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { TOTAL_STEPS } from "@/lib/constants";
 import { requireCustomerAuth } from "@/lib/auth";
+import { SaveStepSchema } from "@/lib/validators";
+
+const ALLOWED_STEP_FIELDS = [
+  "aadhaarNumber", "aadhaarName", "aadhaarDob", "aadhaarGender",
+  "aadhaarAddress", "aadhaarPhoto",
+  "panNumber", "panName", "panDob", "panType",
+  "email",
+];
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,14 +18,26 @@ export async function POST(req: NextRequest) {
     const { customerId } = auth;
 
     const body = await req.json();
-    const { step, data } = body;
+    const parsed = SaveStepSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { step, data } = parsed.data;
 
     const application = await db.findApplicationByCustomerId(customerId);
     if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = { currentStep: step };
-    if (data) Object.assign(updates, data);
+    const updates: Record<string, unknown> = { currentStep: step };
+    if (data) {
+      for (const key of ALLOWED_STEP_FIELDS) {
+        if (key in data) {
+          updates[key] = data[key];
+        }
+      }
+    }
 
     if (step >= TOTAL_STEPS) {
       updates.status = "UNDER_REVIEW";

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import fs from 'fs'
 import { mockDb } from '@/lib/mock-db'
+import { decrypt, hashForLookup } from '@/lib/encryption'
 
 describe('mock-db', () => {
   beforeEach(() => {
@@ -8,9 +9,10 @@ describe('mock-db', () => {
   })
 
   describe('customers', () => {
-    it('createCustomer — creates new customer with mobile', () => {
+    it('createCustomer — creates new customer with encrypted mobile', () => {
       const customer = mockDb.createCustomer('9000000001')
-      expect(customer.mobile).toBe('9000000001')
+      expect(customer.mobileHash).toBe(hashForLookup('9000000001'))
+      expect(decrypt(customer.mobile)).toBe('9000000001')
       expect(customer.role).toBe('CUSTOMER')
       expect(customer.id).toBeTruthy()
     })
@@ -25,7 +27,7 @@ describe('mock-db', () => {
       mockDb.createCustomer('9000000003')
       const found = mockDb.findCustomerByMobile('9000000003')
       expect(found).not.toBeNull()
-      expect(found?.mobile).toBe('9000000003')
+      expect(found?.mobileHash).toBe(hashForLookup('9000000003'))
     })
 
     it('findCustomerByMobile — returns null for unknown mobile', () => {

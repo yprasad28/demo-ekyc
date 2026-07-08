@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireCustomerAuth, getClientIp } from "@/lib/auth";
+import { MAX_FILE_SIZE } from "@/lib/constants";
 import { uploadDocument } from "@/lib/supabase";
 import { SUPABASE_BUCKET } from "@/lib/constants";
-import { requireCustomerAuth, getClientIp } from "@/lib/auth";
 
 const VALID_DOC_TYPES = ["AADHAAR", "PAN", "PHOTO", "SIGNATURE"];
 
@@ -19,6 +20,10 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "File is required." }, { status: 400 });
     if (!docType || !VALID_DOC_TYPES.includes(docType.toUpperCase())) {
       return NextResponse.json({ error: "Invalid document type." }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File size exceeds 5MB limit." }, { status: 400 });
     }
 
     const application = await db.findApplicationByCustomerId(customerId);

@@ -1,4 +1,5 @@
 import { mockDb } from "./mock-db";
+import { encrypt, encryptIfNotNull, decryptIfNotNull, hashForLookup } from "./encryption";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let prisma: any = null;
@@ -47,8 +48,9 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.findCustomerByMobile(mobile);
     try {
+      const mobileHash = hashForLookup(mobile);
       return await prisma.customer.findUnique({
-        where: { mobile }
+        where: { mobileHash }
       });
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
@@ -73,8 +75,10 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.createCustomer(mobile);
     try {
+      const mobileHash = hashForLookup(mobile);
+      const mobileEncrypted = encrypt(mobile);
       return await prisma.customer.create({
-        data: { mobile }
+        data: { mobile: mobileEncrypted, mobileHash }
       });
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
@@ -101,9 +105,15 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.findApplicationByCustomerId(customerId);
     try {
-      return await prisma.kycApplication.findUnique({
+      const app = await prisma.kycApplication.findUnique({
         where: { customerId }
       });
+      if (!app) return null;
+      return {
+        ...app,
+        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber),
+        panNumber: decryptIfNotNull(app.panNumber),
+      };
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.findApplicationByCustomerId(customerId);
@@ -114,9 +124,15 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.findApplicationById(id);
     try {
-      return await prisma.kycApplication.findUnique({
+      const app = await prisma.kycApplication.findUnique({
         where: { id }
       });
+      if (!app) return null;
+      return {
+        ...app,
+        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber),
+        panNumber: decryptIfNotNull(app.panNumber),
+      };
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.findApplicationById(id);
@@ -141,10 +157,22 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.updateApplication(id, updates);
     try {
-      return await prisma.kycApplication.update({
+      const encryptedUpdates = { ...updates };
+      if (updates.aadhaarNumber !== undefined) {
+        encryptedUpdates.aadhaarNumber = encryptIfNotNull(updates.aadhaarNumber);
+      }
+      if (updates.panNumber !== undefined) {
+        encryptedUpdates.panNumber = encryptIfNotNull(updates.panNumber);
+      }
+      const app = await prisma.kycApplication.update({
         where: { id },
-        data: updates
+        data: encryptedUpdates
       });
+      return {
+        ...app,
+        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber),
+        panNumber: decryptIfNotNull(app.panNumber),
+      };
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.updateApplication(id, updates);
@@ -155,13 +183,18 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.listApplications();
     try {
-      return await prisma.kycApplication.findMany({
+      const apps = await prisma.kycApplication.findMany({
         include: {
           customer: true,
           documents: true
         },
         orderBy: { updatedAt: 'desc' }
       });
+      return apps.map((app: Record<string, unknown>) => ({
+        ...app,
+        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber as string | null),
+        panNumber: decryptIfNotNull(app.panNumber as string | null),
+      }));
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.listApplications();

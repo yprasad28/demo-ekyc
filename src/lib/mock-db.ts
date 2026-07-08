@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { encrypt, decrypt, encryptIfNotNull, decryptIfNotNull, hashForLookup } from './encryption';
 
 // Define DB path inside workspace
 const DB_FILE = path.join(process.cwd(), 'mock-db.json');
@@ -9,6 +10,7 @@ let fileAvailable: boolean | null = null;
 export interface CustomerMock {
   id: string;
   mobile: string;
+  mobileHash: string;
   email: string | null;
   role: string;
   createdAt: string;
@@ -85,13 +87,11 @@ function createEmptyDb(): MockSchema {
 }
 
 function initDb(): MockSchema {
-  // Already determined filesystem is read-only — use in-memory
   if (fileAvailable === false) {
     if (!memoryDb) memoryDb = createEmptyDb();
     return memoryDb;
   }
 
-  // Try file-based storage
   if (!fs.existsSync(DB_FILE)) {
     const defaultDb = createEmptyDb();
     try {
@@ -99,7 +99,6 @@ function initDb(): MockSchema {
       fileAvailable = true;
       return defaultDb;
     } catch {
-      // Vercel serverless or read-only filesystem — fall back to memory
       fileAvailable = false;
       memoryDb = defaultDb;
       return memoryDb;
@@ -131,17 +130,25 @@ function saveDb(data: MockSchema) {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch {
-    // Filesystem became read-only (e.g. serverless) — keep in memory
     fileAvailable = false;
     memoryDb = data;
   }
+}
+
+function decryptApplicationFields(app: KycApplicationMock): KycApplicationMock {
+  return {
+    ...app,
+    aadhaarNumber: decryptIfNotNull(app.aadhaarNumber),
+    panNumber: decryptIfNotNull(app.panNumber),
+  };
 }
 
 export const mockDb = {
   // Customers
   findCustomerByMobile: (mobile: string): CustomerMock | null => {
     const db = initDb();
-    return db.customers.find(c => c.mobile === mobile) || null;
+    const hash = hashForLookup(mobile);
+    return db.customers.find(c => c.mobileHash === hash) || null;
   },
   findCustomerById: (id: string): CustomerMock | null => {
     const db = initDb();
@@ -149,12 +156,14 @@ export const mockDb = {
   },
   createCustomer: (mobile: string): CustomerMock => {
     const db = initDb();
-    const existing = db.customers.find(c => c.mobile === mobile);
+    const hash = hashForLookup(mobile);
+    const existing = db.customers.find(c => c.mobileHash === hash);
     if (existing) return existing;
-    
+
     const newCustomer: CustomerMock = {
       id: crypto.randomUUID(),
-      mobile,
+      mobile: encrypt(mobile),
+      mobileHash: hash,
       email: null,
       role: 'CUSTOMER',
       createdAt: new Date().toISOString(),
@@ -177,16 +186,18 @@ export const mockDb = {
   // Applications
   findApplicationByCustomerId: (customerId: string): KycApplicationMock | null => {
     const db = initDb();
-    return db.kyc_applications.find(a => a.customerId === customerId) || null;
+    const app = db.kyc_applications.find(a => a.customerId === customerId) || null;
+    return app ? decryptApplicationFields(app) : null;
   },
   findApplicationById: (id: string): KycApplicationMock | null => {
     const db = initDb();
-    return db.kyc_applications.find(a => a.id === id) || null;
+    const app = db.kyc_applications.find(a => a.id === id) || null;
+    return app ? decryptApplicationFields(app) : null;
   },
   createApplication: (customerId: string): KycApplicationMock => {
     const db = initDb();
     const existing = db.kyc_applications.find(a => a.customerId === customerId);
-    if (existing) return existing;
+    if (existing) return decryptApplicationFields(existing);
 
     const newApp: KycApplicationMock = {
       id: crypto.randomUUID(),
@@ -212,28 +223,37 @@ export const mockDb = {
     };
     db.kyc_applications.push(newApp);
     saveDb(db);
-    return newApp;
+    return decryptApplicationFields(newApp);
   },
   updateApplication: (id: string, updates: Partial<KycApplicationMock>): KycApplicationMock | null => {
     const db = initDb();
     const idx = db.kyc_applications.findIndex(a => a.id === id);
     if (idx === -1) return null;
-    
+
+    const encryptedUpdates: Record<string, unknown> = { ...updates };
+    if (updates.aadhaarNumber !== undefined) {
+      encryptedUpdates.aadhaarNumber = encryptIfNotNull(updates.aadhaarNumber);
+    }
+    if (updates.panNumber !== undefined) {
+      encryptedUpdates.panNumber = encryptIfNotNull(updates.panNumber);
+    }
+
     db.kyc_applications[idx] = {
       ...db.kyc_applications[idx],
-      ...updates,
+      ...encryptedUpdates,
       updatedAt: new Date().toISOString()
     } as KycApplicationMock;
-    
+
     saveDb(db);
-    return db.kyc_applications[idx];
+    return decryptApplicationFields(db.kyc_applications[idx]);
   },
   listApplications: (): (KycApplicationMock & { customer: CustomerMock; documents: DocumentMock[] })[] => {
     const db = initDb();
     return db.kyc_applications.map(app => {
       const customer = db.customers.find(c => c.id === app.customerId) || {
         id: app.customerId,
-        mobile: 'Unknown',
+        mobile: '',
+        mobileHash: '',
         email: null,
         role: 'CUSTOMER',
         createdAt: app.createdAt,
@@ -241,7 +261,7 @@ export const mockDb = {
       };
       const docs = db.documents.filter(d => d.applicationId === app.id);
       return {
-        ...app,
+        ...decryptApplicationFields(app),
         customer,
         documents: docs
       };
@@ -251,9 +271,8 @@ export const mockDb = {
   // Documents
   createDocument: (applicationId: string, type: DocumentMock['type'], fileUrl: string, fileName: string | null): DocumentMock => {
     const db = initDb();
-    // Remove existing doc of same type to avoid duplicates
     db.documents = db.documents.filter(d => !(d.applicationId === applicationId && d.type === type));
-    
+
     const newDoc: DocumentMock = {
       id: crypto.randomUUID(),
       applicationId,

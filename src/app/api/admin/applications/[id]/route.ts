@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdminAuth, getClientIp } from "@/lib/auth";
+import { AdminApplicationActionSchema } from "@/lib/validators";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -10,17 +11,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const { id } = params;
     const body = await req.json();
-    const { action, rejectionReason } = body;
-
-    if (!["APPROVE", "REJECT"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action. Use APPROVE or REJECT." }, { status: 400 });
+    const parsed = AdminApplicationActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { action, rejectionReason } = parsed.data;
 
     const application = await db.findApplicationById(id);
     if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = {
+    const updates: Record<string, unknown> = {
       status: action === "APPROVE" ? "APPROVED" : "REJECTED",
     };
 

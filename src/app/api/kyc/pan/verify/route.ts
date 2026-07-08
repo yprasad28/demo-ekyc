@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyPanRecord, fuzzyNameMatch } from "@/lib/mock-pan";
-import { PAN_REGEX, NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY } from "@/lib/constants";
+import { NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY } from "@/lib/constants";
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
+import { PanVerifySchema } from "@/lib/validators";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,13 +12,14 @@ export async function POST(req: NextRequest) {
     const { customerId } = auth;
 
     const body = await req.json();
-    const { panNumber, dob } = body;
-
-    if (!panNumber) return NextResponse.json({ error: "PAN number is required." }, { status: 400 });
-
-    if (!PAN_REGEX.test(panNumber.toUpperCase())) {
-      return NextResponse.json({ error: "Invalid PAN format. Expected format: ABCDE1234F" }, { status: 400 });
+    const parsed = PanVerifySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { panNumber, dob } = parsed.data;
 
     const panData = verifyPanRecord(panNumber);
     if (!panData) {

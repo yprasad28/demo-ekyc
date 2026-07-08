@@ -4,15 +4,19 @@ import { verifyOTP } from "@/lib/mock-otp";
 import { JWT_SECRET, CUSTOMER_TOKEN_MAX_AGE, CUSTOMER_TOKEN_EXPIRY } from "@/lib/constants";
 import { setAuthCookie, getClientIp } from "@/lib/auth";
 import jwt from "jsonwebtoken";
+import { MobileOtpSchema } from "@/lib/validators";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { mobile, otp } = body;
-
-    if (!mobile || !otp) {
-      return NextResponse.json({ error: "Mobile and OTP are required." }, { status: 400 });
+    const parsed = MobileOtpSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+    const { mobile, otp } = parsed.data;
 
     const valid = verifyOTP(mobile, otp);
     if (!valid) {
@@ -27,7 +31,7 @@ export async function POST(req: NextRequest) {
     const application = await db.findApplicationByCustomerId(customer.id);
 
     const token = jwt.sign(
-      { customerId: customer.id, mobile: customer.mobile, role: "CUSTOMER" },
+      { customerId: customer.id, mobile: mobile, role: "CUSTOMER" },
       JWT_SECRET,
       { expiresIn: CUSTOMER_TOKEN_EXPIRY }
     );
@@ -37,8 +41,7 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      token,
-      customer: { id: customer.id, mobile: customer.mobile, email: customer.email },
+      customer: { id: customer.id, mobile: mobile, email: customer.email },
       application: application ? { id: application.id, currentStep: application.currentStep, status: application.status } : null,
     });
 

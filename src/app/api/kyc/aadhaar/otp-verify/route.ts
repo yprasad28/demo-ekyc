@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { verifyOTP } from "@/lib/mock-otp";
 import { getAadhaarProfile } from "@/lib/mock-aadhaar";
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limiter";
+import { AadhaarVerifySchema } from "@/lib/validators";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,10 +13,21 @@ export async function POST(req: NextRequest) {
     const { customerId } = auth;
 
     const body = await req.json();
-    const { otp, aadhaarNumber } = body;
+    const parsed = AadhaarVerifySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { otp, aadhaarNumber } = parsed.data;
 
-    if (!otp || !aadhaarNumber) {
-      return NextResponse.json({ error: "OTP and Aadhaar number are required." }, { status: 400 });
+    const limiter = rateLimit(`aadhaar-otp-verify:${customerId}`, 5, 10 * 60 * 1000);
+    if (!limiter.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429, headers: { "Retry-After": "600" } }
+      );
     }
 
     const valid = verifyOTP(`aadhaar-${customerId}`, otp);
