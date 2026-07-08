@@ -49,9 +49,14 @@ export const db = {
     if (useFallback) return mockDb.findCustomerByMobile(mobile);
     try {
       const mobileHash = hashForLookup(mobile);
-      return await prisma.customer.findUnique({
+      const customer = await prisma.customer.findUnique({
         where: { mobileHash }
       });
+      if (!customer) return null;
+      return {
+        ...customer,
+        mobile: decryptIfNotNull(customer.mobile),
+      };
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.findCustomerByMobile(mobile);
@@ -62,9 +67,14 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.findCustomerById(id);
     try {
-      return await prisma.customer.findUnique({
+      const customer = await prisma.customer.findUnique({
         where: { id }
       });
+      if (!customer) return null;
+      return {
+        ...customer,
+        mobile: decryptIfNotNull(customer.mobile),
+      };
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.findCustomerById(id);
@@ -190,11 +200,18 @@ export const db = {
         },
         orderBy: { updatedAt: 'desc' }
       });
-      return apps.map((app: Record<string, unknown>) => ({
-        ...app,
-        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber as string | null),
-        panNumber: decryptIfNotNull(app.panNumber as string | null),
-      }));
+      return apps.map((app: Record<string, unknown>) => {
+        const customer = app.customer as Record<string, unknown> | null;
+        return {
+          ...app,
+          aadhaarNumber: decryptIfNotNull(app.aadhaarNumber as string | null),
+          panNumber: decryptIfNotNull(app.panNumber as string | null),
+          customer: customer ? {
+            ...customer,
+            mobile: decryptIfNotNull(customer.mobile as string | null),
+          } : null,
+        };
+      });
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.listApplications();

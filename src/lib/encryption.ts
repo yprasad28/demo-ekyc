@@ -41,7 +41,11 @@ export function encryptIfNotNull(value: string | null): string | null {
 
 export function decryptIfNotNull(value: string | null): string | null {
   if (value === null) return null;
-  return decrypt(value);
+  try {
+    return decrypt(value);
+  } catch {
+    return value;
+  }
 }
 
 export function hashForLookup(value: string): string {

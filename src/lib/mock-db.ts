@@ -148,11 +148,21 @@ export const mockDb = {
   findCustomerByMobile: (mobile: string): CustomerMock | null => {
     const db = initDb();
     const hash = hashForLookup(mobile);
-    return db.customers.find(c => c.mobileHash === hash) || null;
+    const customer = db.customers.find(c => c.mobileHash === hash) || null;
+    if (!customer) return null;
+    return {
+      ...customer,
+      mobile: decryptIfNotNull(customer.mobile),
+    };
   },
   findCustomerById: (id: string): CustomerMock | null => {
     const db = initDb();
-    return db.customers.find(c => c.id === id) || null;
+    const customer = db.customers.find(c => c.id === id) || null;
+    if (!customer) return null;
+    return {
+      ...customer,
+      mobile: decryptIfNotNull(customer.mobile),
+    };
   },
   createCustomer: (mobile: string): CustomerMock => {
     const db = initDb();
@@ -250,15 +260,18 @@ export const mockDb = {
   listApplications: (): (KycApplicationMock & { customer: CustomerMock; documents: DocumentMock[] })[] => {
     const db = initDb();
     return db.kyc_applications.map(app => {
-      const customer = db.customers.find(c => c.id === app.customerId) || {
-        id: app.customerId,
-        mobile: '',
-        mobileHash: '',
-        email: null,
-        role: 'CUSTOMER',
-        createdAt: app.createdAt,
-        updatedAt: app.updatedAt
-      };
+      const rawCustomer = db.customers.find(c => c.id === app.customerId);
+      const customer: CustomerMock = rawCustomer
+        ? { ...rawCustomer, mobile: decryptIfNotNull(rawCustomer.mobile) }
+        : {
+          id: app.customerId,
+          mobile: '',
+          mobileHash: '',
+          email: null,
+          role: 'CUSTOMER',
+          createdAt: app.createdAt,
+          updatedAt: app.updatedAt
+        };
       const docs = db.documents.filter(d => d.applicationId === app.id);
       return {
         ...decryptApplicationFields(app),
