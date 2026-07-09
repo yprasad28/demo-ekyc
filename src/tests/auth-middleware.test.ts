@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import jwt from "jsonwebtoken";
 
 // ============================================================
@@ -25,6 +25,7 @@ function makeRequest(opts: {
   cookieName?: string;
   cookieValue?: string;
   authHeader?: string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): any {
   const cookies = new Map<string, { value: string }>();
   if (opts.cookieName && opts.cookieValue) {
