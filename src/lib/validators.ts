@@ -29,5 +29,5 @@ export const AdminApplicationActionSchema = z.object({
 
 export const SaveStepSchema = z.object({
   step: z.number().int().min(1).max(7),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
 });
