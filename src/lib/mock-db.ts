@@ -152,7 +152,7 @@ export const mockDb = {
     if (!customer) return null;
     return {
       ...customer,
-      mobile: decryptIfNotNull(customer.mobile),
+      mobile: decryptIfNotNull(customer.mobile) ?? customer.mobile,
     };
   },
   findCustomerById: (id: string): CustomerMock | null => {
@@ -161,7 +161,7 @@ export const mockDb = {
     if (!customer) return null;
     return {
       ...customer,
-      mobile: decryptIfNotNull(customer.mobile),
+      mobile: decryptIfNotNull(customer.mobile) ?? customer.mobile,
     };
   },
   createCustomer: (mobile: string): CustomerMock => {
@@ -262,7 +262,7 @@ export const mockDb = {
     return db.kyc_applications.map(app => {
       const rawCustomer = db.customers.find(c => c.id === app.customerId);
       const customer: CustomerMock = rawCustomer
-        ? { ...rawCustomer, mobile: decryptIfNotNull(rawCustomer.mobile) }
+        ? { ...rawCustomer, mobile: decryptIfNotNull(rawCustomer.mobile) ?? rawCustomer.mobile }
         : {
           id: app.customerId,
           mobile: '',
