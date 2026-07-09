@@ -8,7 +8,6 @@ const ALLOWED_STEP_FIELDS = [
   "aadhaarNumber", "aadhaarName", "aadhaarDob", "aadhaarGender",
   "aadhaarAddress", "aadhaarPhoto",
   "panNumber", "panName", "panDob", "panType",
-  "email",
 ];
 
 export async function POST(req: NextRequest) {
@@ -36,6 +35,9 @@ export async function POST(req: NextRequest) {
         if (key in data) {
           updates[key] = data[key];
         }
+      }
+      if (typeof data.email === "string" && data.email) {
+        await db.updateCustomerEmail(customerId, data.email);
       }
     }
 

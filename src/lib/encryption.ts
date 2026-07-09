@@ -22,7 +22,7 @@ export function encrypt(plaintext: string): string {
 export function decrypt(ciphertext: string): string {
   const key = getKey();
   const [ivHex, authTagHex, encryptedHex] = ciphertext.split(":");
-  if (!ivHex || !authTagHex || !encryptedHex) {
+  if (ivHex === undefined || authTagHex === undefined || encryptedHex === undefined) {
     throw new Error("Invalid ciphertext format");
   }
   const iv = Buffer.from(ivHex, "hex");
