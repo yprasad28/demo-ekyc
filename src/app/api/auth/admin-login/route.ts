@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyAdminToken, getClientIp, setAuthCookie } from "@/lib/auth";
+import { getClientIp, setAuthCookie } from "@/lib/auth";
 import { ADMIN_TOKEN_MAX_AGE, ADMIN_TOKEN_EXPIRY } from "@/lib/constants";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limiter";
-import { MobileSchema } from "@/lib/validators";
 
 const ADMIN_CREDENTIALS = [
   {

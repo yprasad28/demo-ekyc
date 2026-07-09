@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { encrypt, decrypt, encryptIfNotNull, decryptIfNotNull, hashForLookup } from './encryption';
+import { encrypt, encryptIfNotNull, decryptIfNotNull, hashForLookup } from './encryption';
 
 // Define DB path inside workspace
 const DB_FILE = path.join(process.cwd(), 'mock-db.json');
