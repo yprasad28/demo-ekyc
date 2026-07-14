@@ -1,0 +1,198 @@
+================================================================================
+           SUREPASS vs DECENTRO - eKYC Provider Comparison
+                        Prepared for: Founder Review
+                        Date: July 14, 2026
+================================================================================
+
+1. COMPANY OVERVIEW
+--------------------------------------------------------------------------------
+
+  SUREPASS                                    DECENTRO
+  - Focus: Identity verification & KYC       - Focus: Full-stack banking
+    APIs (specialist provider)                 infrastructure (payments +
+  - Founded: ~2018, India-focused              KYC + ledgers + virtual accounts)
+  - 3000+ business clients                   - Founded: ~2020, India-focused
+  - ISO 27001 certified                      - Growing fintech ecosystem
+  - OVSE-certified for Aadhaar               - Standard compliance
+
+
+2. AADHAAR VERIFICATION
+--------------------------------------------------------------------------------
+
+  Capability                    SUREPASS          DECENTRO
+  ---------------------------------------------------------------
+  Aadhaar OTP (UIDAI gateway)   YES (direct)      NO (not available)
+  Aadhaar QR Scanning           YES               NO
+  Aadhaar OVSE (Face Auth)      YES (certified)   YES (QR Code flow)
+  eAadhaar Advanced/XML         YES               Via DigiLocker only
+  Aadhaar Number Validation     YES (quick check) NO
+  Photo extraction              YES (base64)      Via OVSE callback only
+  Address extraction            YES (full)        Via OVSE callback
+
+  WINNER: SUREPASS
+  Reason: Only provider with direct UIDAI OTP gateway. Multiple fallback
+  methods available. Critical for our current UX (enter Aadhaar -> OTP -> verify).
+
+
+3. PAN VERIFICATION
+--------------------------------------------------------------------------------
+
+  Capability                    SUREPASS          DECENTRO
+  ---------------------------------------------------------------
+  PAN Basic                     YES               YES
+  PAN Detailed (name/DOB)       YES               YES (3 tiers: Core/Plus/Complete)
+  PAN + Name/DOB Compare        Via logic         YES (PAN_COMPARE type)
+  PAN KRA Verification          YES               NO
+  PAN OCR (image upload)        YES (AI-powered)  NO
+  PAN Bank Account Linkage      NO                YES
+  Bulk PAN (CSV upload)         YES (10K+ rows)   NO
+
+  VERDICT: TIE
+  Surepass has OCR + KRA verification.
+  Decentro has PAN bank linkage + tiered detail levels.
+  Both adequate for our use case.
+
+
+4. API DESIGN & INTEGRATION
+--------------------------------------------------------------------------------
+
+  Aspect                      SUREPASS            DECENTRO
+  ---------------------------------------------------------------
+  Sandbox URL                 sandbox.surepass.io in.staging.decentro.tech
+  Production URL              kyc-api.surepass.io in.decentro.tech
+  Auth method                 JWT Bearer token    client_id + client_secret
+                              (from API key)      headers OR JWT
+  API style                   Simple REST,        REST, grouped by module
+                              single-purpose
+  SDKs available              No official SDKs    Flutter + React Native SDKs
+  Documentation               Apidog + website    ReadMe (polished)
+  Postman collection          Available           Available
+
+  Example - Surepass Aadhaar OTP:
+
+    Step 1: Send OTP
+    POST /api/v1/aadhaar/generate-otp
+    Headers: Authorization: Bearer <token>
+    Body: { "id_number": "123456789012" }
+
+    Step 2: Verify OTP
+    POST /api/v1/aadhaar/verify-otp
+    Headers: Authorization: Bearer <token>
+    Body: { "client_id": "xxx", "otp": "123456" }
+
+    Response: Full Aadhaar profile (name, DOB, gender, address, photo)
+
+  Example - Decentro PAN Verification:
+
+    POST /kyc/public_registry/validate
+    Headers: client_id, client_secret, module_secret
+    Body: {
+      "reference_id": "TX-12345",
+      "document_type": "PAN",
+      "id_number": "ABCDE1234F",
+      "consent": "Y",
+      "purpose": "KYC verification for onboarding"
+    }
+
+    Response: { name, idStatus, category }
+
+
+5. PRICING (Approximate)
+--------------------------------------------------------------------------------
+
+  Service                     SUREPASS            DECENTRO
+  ---------------------------------------------------------------
+  PAN Verification            ~₹5-15/call         ~₹5-20/call
+  Aadhaar OTP                 ~₹15-25/verify      N/A (not offered)
+  Aadhaar OVSE                ~₹20-30/verify      ~₹20-30/verify
+  Bank Verification           ~₹5-10/call         Via penny drop (~₹5-15)
+  Free tier                   Sandbox access      Sandbox access
+  Minimum commitment          Low (startup-friendly) Medium (enterprise)
+
+  Note: Exact pricing varies by volume. Contact both for quotes.
+
+
+6. ECOSYSTEM BEYOND KYC
+--------------------------------------------------------------------------------
+
+  Feature                     SUREPASS            DECENTRO
+  ---------------------------------------------------------------
+  PAN                         YES                 YES
+  Aadhaar                     YES (all methods)   Partial (OVSE only)
+  DigiLocker                  YES                 YES
+  CKYC                        NO                  YES
+  Bank Verification           YES                 YES (penny drop)
+  Vehicle RC                  YES                 YES
+  Driving License             YES                 YES
+  Voter ID                    YES                 YES
+  Passport                    YES                 Deprecated
+  GST Verification            YES                 YES (ID converter)
+  Income Verification         YES (core strength) NO
+  Video KYC                   YES                 NO
+  Face Match / Liveness       YES                 YES (Farsight)
+  Credit Bureau               NO                  YES
+  Payments (UPI/NEFT)         NO                  YES (full stack)
+  Virtual Accounts            NO                  YES
+  Ledger                      NO                  YES
+
+
+7. RECOMMENDATION FOR OUR PROJECT
+--------------------------------------------------------------------------------
+
+  CURRENT STATE:
+  - We have Decentro sandbox credentials (ready to use)
+  - Mobile OTP: Mock (no real SMS provider needed for demo)
+  - Aadhaar: Mock (5 hardcoded profiles)
+  - PAN: Mock (5 hardcoded records + fuzzy name matching)
+
+  RECOMMENDED APPROACH (Dual-Provider):
+
+  Aadhaar Provider:
+    - MockAadhaarProvider      (fallback for offline/demo)
+    - SurepassAadhaarProvider   (primary - UIDAI OTP gateway)
+    - DecentroOvseProvider      (alternative - face auth flow)
+
+  PAN Provider:
+    - MockPanProvider           (fallback for offline/demo)
+    - DecentroPanProvider       (primary - already have credentials)
+    - SurepassPanProvider       (alternative if needed)
+
+  WHY DUAL PROVIDER:
+  1. Surepass is the ONLY option for Aadhaar OTP via UIDAI gateway
+  2. Decentro PAN works well and we already have credentials
+  3. Provider abstraction allows switching without code changes
+  4. Mock fallback ensures demo works offline
+
+  IMPLEMENTATION PHASES:
+
+  Phase 1: Provider interfaces + factory pattern (architecture)
+  Phase 2: Decentro PAN integration (quick win, have credentials)
+  Phase 3: Surepass Aadhaar OTP integration (core KYC flow)
+  Phase 4: Decentro Aadhaar OVSE as alternative (optional)
+  Phase 5: Testing + deployment with feature flags
+
+
+8. RISK ASSESSMENT
+--------------------------------------------------------------------------------
+
+  Risk                          Mitigation
+  ---------------------------------------------------------------
+  Surepass downtime             Fall back to Decentro OVSE or mock
+  Decentro PAN API changes      Fall back to mock PAN
+  UIDAI rate limiting           Implement retry + caching
+  Cost overrun (per-call)       Monitor usage, set alerts
+  Vendor lock-in                Provider abstraction pattern
+  Sandbox vs production gap     Test both environments thoroughly
+
+
+9. DECISION REQUIRED
+--------------------------------------------------------------------------------
+
+  [ ] Proceed with dual-provider approach (Surepass + Decentro)?
+  [ ] Sign up for Surepass sandbox to test Aadhaar OTP?
+  [ ] Budget allocation for per-call pricing?
+  [ ] Target go-live date?
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================
