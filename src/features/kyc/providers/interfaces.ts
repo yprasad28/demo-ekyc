@@ -19,7 +19,7 @@ export interface DigiLockerSessionResult {
 }
 
 export interface DigiLockerProvider {
-  initiateSession(aadhaarNumber: string): Promise<DigiLockerSessionResult>;
+  initiateSession(aadhaarNumber?: string): Promise<DigiLockerSessionResult>;
   fetchEaadhaar(txnId: string): Promise<AadhaarProfile | null>;
 }
 

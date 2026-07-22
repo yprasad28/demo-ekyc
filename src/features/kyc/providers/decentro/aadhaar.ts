@@ -5,21 +5,23 @@ import type {
   AadhaarProfile,
 } from "../interfaces";
 
+function generateRefId(): string {
+  return `ref_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export class DecentroDigiLockerProvider implements DigiLockerProvider {
-  async initiateSession(
-    _aadhaarNumber: string
-  ): Promise<DigiLockerSessionResult> {
+  async initiateSession(): Promise<DigiLockerSessionResult> {
     const result = await decentroRequest(
       "/v2/kyc/sso/digilocker/session",
       {
-        consent: "Y",
-        consentPurpose: "KYC verification for account opening",
-        consentDuration: 30,
-        redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/kyc/aadhaar/callback`,
+        consent: true,
+        purpose: "KYC verification for account opening",
+        reference_id: generateRefId(),
+        redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/kyc/aadhaar/callback`,
       }
     );
 
-    const txnId = result.decentroTxnId || (result.result?.decstroTxnId as string) || "";
+    const txnId = result.decentroTxnId || (result.result?.decentroTxnId as string) || "";
     const authUrl =
       (result.result?.authorizationUrl as string) ||
       (result.data?.authorizationUrl as string) ||
@@ -39,7 +41,11 @@ export class DecentroDigiLockerProvider implements DigiLockerProvider {
   async fetchEaadhaar(txnId: string): Promise<AadhaarProfile | null> {
     const result = await decentroRequest(
       `/v2/kyc/sso/digilocker/${txnId}/eaadhaar`,
-      {}
+      {
+        consent: true,
+        purpose: "KYC verification for account opening",
+        reference_id: generateRefId(),
+      }
     );
 
     const profile =

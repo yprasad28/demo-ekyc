@@ -1,4 +1,4 @@
-import { verifyPanRecord, type PanRecord } from "@/lib/mock-pan";
+import { verifyPanRecord } from "@/lib/mock-pan";
 import type { PanProvider, PanProfile } from "../interfaces";
 
 export class MockPanProvider implements PanProvider {
