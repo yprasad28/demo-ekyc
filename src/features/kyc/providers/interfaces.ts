@@ -12,6 +12,17 @@ export interface AadhaarProvider {
   verifyOtp(aadhaarNumber: string, otp: string): Promise<AadhaarProfile | null>;
 }
 
+export interface DigiLockerSessionResult {
+  success: boolean;
+  txnId: string;
+  authorizationUrl: string;
+}
+
+export interface DigiLockerProvider {
+  initiateSession(aadhaarNumber: string): Promise<DigiLockerSessionResult>;
+  fetchEaadhaar(txnId: string): Promise<AadhaarProfile | null>;
+}
+
 export interface PanProfile {
   panNumber: string;
   name: string;

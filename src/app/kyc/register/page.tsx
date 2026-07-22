@@ -577,7 +577,7 @@ function StepConsent({ token, onNext, onBack }: { token: string; onNext: () => v
 // ─── Step 5: Aadhaar Verification (with tabs) ────────────────────────────────
 function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNext: (data: AadhaarData) => void; onBack: () => void; onShowOtp: (otp: string) => void }) {
   // back button rendered inside the return
-  const [activeTab, setActiveTab] = useState<"manual" | "xml" | "qr">("manual");
+  const [activeTab, setActiveTab] = useState<"digilocker" | "manual" | "xml" | "qr">("digilocker");
   const [aadhaar, setAadhaar] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpDigits, setOtpDigits] = useState(["","","","","",""]);
@@ -589,6 +589,8 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
   const [xmlFile, setXmlFile] = useState<File | null>(null);
   const [shareCode, setShareCode] = useState("");
   const [xmlError, setXmlError] = useState("");
+  const [digilockerLoading, setDigilockerLoading] = useState(false);
+  const [digilockerError, setDigilockerError] = useState("");
 
   const formatAadhaar = (v: string) => {
     const digits = v.replace(/\D/g,"").slice(0,12);
@@ -644,10 +646,42 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
   };
 
   const tabs = [
-    { key: "manual" as const, label: "Manual Entry" },
+    { key: "digilocker" as const, label: "DigiLocker" },
+    { key: "manual" as const, label: "OTP Verify" },
     { key: "xml" as const, label: "XML Upload" },
     { key: "qr" as const, label: "QR Scan" },
   ];
+
+  const handleDigiLocker = async () => {
+    const cleanNum = aadhaar.replace(/\s/g, "");
+    if (cleanNum.length !== 12) {
+      setDigilockerError("Please enter a valid 12-digit Aadhaar number.");
+      return;
+    }
+    setDigilockerLoading(true);
+    setDigilockerError("");
+    try {
+      const res = await fetch("/api/kyc/aadhaar/digilocker/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ aadhaarNumber: cleanNum }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDigilockerError(data.error || "Failed to initiate DigiLocker session.");
+        setDigilockerLoading(false);
+        return;
+      }
+      localStorage.setItem("kyc_token", token);
+      window.location.href = data.authorizationUrl;
+    } catch {
+      setDigilockerError("Network error. Please try again.");
+      setDigilockerLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-5 animate-slide-up" onKeyDown={(e) => { if (e.key === "Enter" && !loading && activeTab === "manual" && !otpSent && consent) handleSendOtp(); }}>
@@ -669,7 +703,45 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
         ))}
       </div>
 
-      {/* Manual Entry */}
+      {/* DigiLocker */}
+      {activeTab === "digilocker" && (
+        <div className="space-y-4">
+          <div>
+            <label className="input-label">Aadhaar Number</label>
+            <input className="input-field font-mono text-lg tracking-widest" type="text" maxLength={14}
+              placeholder="0000 0000 0000" value={aadhaar}
+              onChange={(e) => { setAadhaar(formatAadhaar(e.target.value)); setDigilockerError(""); }} />
+            <p className="text-[11px] text-on-surface-variant mt-1">Enter the 12-digit number on your Aadhaar</p>
+            {digilockerError && <p className="text-xs text-error mt-1.5">{digilockerError}</p>}
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" className="mt-1 w-4 h-4 rounded border-border-input accent-primary" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+            <span className="text-xs text-on-surface-variant">
+              I hereby provide my voluntary consent to SecureKYC to access my Aadhaar details via DigiLocker for KYC verification. I understand this data will be handled as per the <a href="#" className="text-primary font-semibold">Privacy Policy</a>.
+            </span>
+          </label>
+          <button className="btn-primary w-full" disabled={loading || !consent || aadhaar.replace(/\s/g, "").length !== 12}
+            onClick={handleDigiLocker}>
+            {digilockerLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Redirecting to DigiLocker...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">verified_user</span>
+                Continue with DigiLocker
+              </span>
+            )}
+          </button>
+          <div className="flex items-center justify-center gap-2 text-xs text-on-surface-variant">
+            <span className="material-symbols-outlined text-[14px]" style={FILLED}>shield</span>
+            Government-secured DigiLocker authentication
+          </div>
+        </div>
+      )}
+
+      {/* Manual Entry (OTP) */}
       {activeTab === "manual" && (
         <div className="space-y-4">
           {!otpSent ? (
