@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyPanRecord, fuzzyNameMatch } from "@/lib/mock-pan";
+import { fuzzyNameMatch } from "@/lib/mock-pan";
 import { NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY } from "@/lib/constants";
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
 import { PanVerifySchema } from "@/lib/validators";
+import { createPanProvider } from "@/features/kyc/providers/factory";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +22,8 @@ export async function POST(req: NextRequest) {
     }
     const { panNumber, dob } = parsed.data;
 
-    const panData = verifyPanRecord(panNumber);
+    const panProvider = createPanProvider();
+    const panData = await panProvider.verifyPan(panNumber);
     if (!panData) {
       return NextResponse.json({
         error: "PAN not found in NSDL database.",
