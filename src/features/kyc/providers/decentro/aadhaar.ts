@@ -1,91 +1,116 @@
 import { decentroRequest } from "./client";
-import type {
-  DigiLockerProvider,
-  DigiLockerSessionResult,
-  AadhaarProfile,
-} from "../interfaces";
+import type { DigiLockerSessionResult } from "../interfaces";
 
 function generateRefId(): string {
   return `ref_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export class DecentroDigiLockerProvider implements DigiLockerProvider {
-  async initiateSession(): Promise<DigiLockerSessionResult> {
-    const result = await decentroRequest(
-      "/v2/kyc/sso/digilocker/session",
-      {
-        consent: true,
-        purpose: "KYC verification for account opening",
-        reference_id: generateRefId(),
-        redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/kyc/aadhaar/callback`,
-      }
-    );
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const txnId = result.decentroTxnId || (result.result?.decentroTxnId as string) || "";
-    const authUrl =
-      (result.result?.authorizationUrl as string) ||
-      (result.data?.authorizationUrl as string) ||
-      "";
+export async function createUIStreamSession(): Promise<DigiLockerSessionResult> {
+  const result = await decentroRequest("/v2/kyc/workflows/uistream", {
+    reference_id: generateRefId(),
+    consent: true,
+    purpose: "KYC verification for account opening",
+    callback_url: `${appUrl}/api/kyc/aadhaar/callback`,
+    redirect_url: `${appUrl}/kyc/aadhaar/callback`,
+    uistream: "DIGILOCKER_AADHAAR",
+  });
 
-    if (!authUrl) {
-      throw new Error("No authorization URL received from Decentro");
-    }
+  const txnId = result.decentroTxnId || "";
+  const sessionUrl =
+    (result.data?.url as string) ||
+    (result.result?.url as string) ||
+    (result.result?.sessionUrl as string) ||
+    (result.data?.sessionUrl as string) ||
+    (result.result?.authorizationUrl as string) ||
+    (result.data?.authorizationUrl as string) ||
+    "";
 
-    return {
-      success: true,
-      txnId,
-      authorizationUrl: authUrl,
-    };
+  if (!sessionUrl) {
+    throw new Error("No session URL received from Decentro UIStreams");
   }
 
-  async fetchEaadhaar(txnId: string): Promise<AadhaarProfile | null> {
-    const result = await decentroRequest(
-      `/v2/kyc/sso/digilocker/${txnId}/eaadhaar`,
-      {
-        consent: true,
-        purpose: "KYC verification for account opening",
-        reference_id: generateRefId(),
-      }
-    );
+  return {
+    success: true,
+    txnId,
+    authorizationUrl: sessionUrl,
+  };
+}
 
-    const profile =
-      (result.result as Record<string, unknown>) ||
-      (result.data as Record<string, unknown>);
-
-    if (!profile) return null;
-
-    const name =
-      (profile.full_name as string) ||
-      (profile.name as string) ||
-      "";
-    const dob = (profile.dob as string) || (profile.date_of_birth as string) || "";
-    const gender =
-      (profile.gender as "M" | "F") ||
-      ((profile.gender as string)?.toUpperCase() === "F" ? "F" : "M");
-    const addressParts: string[] = [];
-    if (profile.house) addressParts.push(profile.house as string);
-    if (profile.street) addressParts.push(profile.street as string);
-    if (profile.locality) addressParts.push(profile.locality as string);
-    if (profile.district) addressParts.push(profile.district as string);
-    if (profile.state) addressParts.push(profile.state as string);
-    if (profile.pincode) addressParts.push(profile.pincode as string);
-    const address = addressParts.join(", ");
-    const maskedAadhaar =
-      (profile.aadhaar_number as string) ||
-      (profile.uid as string) ||
-      "";
-    const photo =
-      (profile.photo as string) ||
-      (profile.photo_url as string) ||
-      "";
-
-    return {
-      name,
-      dob,
-      gender: gender as "M" | "F",
-      address,
-      maskedAadhaar,
-      photo,
+export interface UIStreamCallbackPayload {
+  initialDecentroTxnId: string;
+  status: string;
+  message: string;
+  responseKey: string;
+  data?: {
+    AADHAAR?: {
+      decentroTxnId: string;
+      status: string;
+      responseCode: string;
+      message: string;
+      data: {
+        aadhaarUid?: string;
+        proofOfIdentity?: {
+          dob?: string;
+          gender?: string;
+          name?: string;
+          hashedMobileNumber?: string;
+        };
+        proofOfAddress?: {
+          careOf?: string;
+          country?: string;
+          district?: string;
+          house?: string;
+          landmark?: string;
+          locality?: string;
+          pincode?: string;
+          postOffice?: string;
+          state?: string;
+          street?: string;
+          subDistrict?: string;
+          vtc?: string;
+        };
+        image?: string;
+        pdf?: string;
+        xml?: string;
+      };
+      responseKey?: string;
     };
+  };
+}
+
+export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
+  const aadhaar = payload.data?.AADHAAR;
+
+  if (!aadhaar || aadhaar.status !== "SUCCESS" || !aadhaar.data) {
+    return null;
   }
+
+  const { proofOfIdentity, proofOfAddress, image } = aadhaar.data;
+  const uid = aadhaar.data.aadhaarUid || "";
+
+  const name = proofOfIdentity?.name || "";
+  const dob = proofOfIdentity?.dob || "";
+  const gender = (proofOfIdentity?.gender as "M" | "F") || "M";
+
+  const addressParts: string[] = [];
+  if (proofOfAddress?.house) addressParts.push(proofOfAddress.house);
+  if (proofOfAddress?.street) addressParts.push(proofOfAddress.street);
+  if (proofOfAddress?.locality) addressParts.push(proofOfAddress.locality);
+  if (proofOfAddress?.district) addressParts.push(proofOfAddress.district);
+  if (proofOfAddress?.state) addressParts.push(proofOfAddress.state);
+  if (proofOfAddress?.pincode) addressParts.push(proofOfAddress.pincode);
+  const address = addressParts.join(", ");
+
+  const maskedAadhaar = uid ? uid.replace(/(\d{4})/g, "$1 ").trim() : "";
+
+  return {
+    name,
+    dob,
+    gender,
+    address,
+    maskedAadhaar,
+    photo: image || "",
+  };
 }

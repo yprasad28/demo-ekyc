@@ -653,21 +653,16 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
   ];
 
   const handleDigiLocker = async () => {
-    const cleanNum = aadhaar.replace(/\s/g, "");
-    if (cleanNum.length !== 12) {
-      setDigilockerError("Please enter a valid 12-digit Aadhaar number.");
-      return;
-    }
     setDigilockerLoading(true);
     setDigilockerError("");
     try {
-      const res = await fetch("/api/kyc/aadhaar/digilocker/session", {
+      const res = await fetch("/api/kyc/aadhaar/sso-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ aadhaarNumber: cleanNum }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -675,8 +670,10 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
         setDigilockerLoading(false);
         return;
       }
-      localStorage.setItem("kyc_token", token);
-      window.location.href = data.authorizationUrl;
+      if (data.txnId) {
+        localStorage.setItem("digilocker_txnId", data.txnId);
+      }
+      window.location.href = data.sessionUrl;
     } catch {
       setDigilockerError("Network error. Please try again.");
       setDigilockerLoading(false);
@@ -720,7 +717,7 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
               I hereby provide my voluntary consent to SecureKYC to access my Aadhaar details via DigiLocker for KYC verification. I understand this data will be handled as per the <a href="#" className="text-primary font-semibold">Privacy Policy</a>.
             </span>
           </label>
-          <button className="btn-primary w-full" disabled={loading || !consent || aadhaar.replace(/\s/g, "").length !== 12}
+          <button className="btn-primary w-full" disabled={digilockerLoading || !consent || aadhaar.replace(/\s/g, "").length !== 12}
             onClick={handleDigiLocker}>
             {digilockerLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -1334,8 +1331,49 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const savedToken = localStorage.getItem("kyc_token");
+    console.log("[Register] Token exists:", !!savedToken);
     if (savedToken) {
       setToken(savedToken);
+
+      fetch("/api/kyc/save-step", {
+        headers: { Authorization: `Bearer ${savedToken}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          console.log("[Register] Application data:", JSON.stringify({
+            hasApp: !!data.application,
+            currentStep: data.application?.currentStep,
+            aadhaarName: data.application?.aadhaarName,
+            aadhaarNumber: data.application?.aadhaarNumber,
+          }));
+          if (!data.application) return;
+          const app = data.application;
+
+          if (app.aadhaarName) {
+            console.log("[Register] Aadhaar found → jumping to step 6 (PAN)");
+            setAadhaarData({
+              name: app.aadhaarName,
+              dob: app.aadhaarDob || "",
+              gender: app.aadhaarGender || "M",
+              address: app.aadhaarAddress || "",
+              maskedAadhaar: app.aadhaarNumber || "",
+              photo: app.aadhaarPhoto || "",
+            });
+            setStep(6);
+          } else if (app.currentStep >= 4) {
+            console.log("[Register] No aadhaarName, currentStep:", app.currentStep, "→ step 5 (Aadhaar picker)");
+            setStep(5);
+          } else if (app.currentStep >= 3) {
+            console.log("[Register] currentStep:", app.currentStep, "→ step 4 (Consent)");
+            setStep(4);
+          } else if (app.currentStep >= 2) {
+            console.log("[Register] currentStep:", app.currentStep, "→ step 3 (Email)");
+            setStep(3);
+          } else {
+            console.log("[Register] currentStep:", app.currentStep, "→ staying at step 1");
+          }
+        })
+        .catch((err) => console.error("[Register] Fetch error:", err));
     }
   }, []);
 

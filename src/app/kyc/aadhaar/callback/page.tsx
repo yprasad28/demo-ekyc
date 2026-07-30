@@ -1,67 +1,73 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 function CallbackContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Processing your DigiLocker authentication...");
+  const [message, setMessage] = useState("Processing your Aadhaar verification...");
 
   useEffect(() => {
-    const txnId = searchParams.get("decstro_txn_id") || searchParams.get("txn_id");
+    const savedToken = localStorage.getItem("kyc_token");
+    const txnId = localStorage.getItem("digilocker_txnId");
     const code = searchParams.get("code");
+    console.log("[Callback] Token:", !!savedToken, "txnId:", txnId, "code:", code);
 
-    if (!txnId && !code) {
-      setStatus("error");
-      setMessage("No transaction reference found. Please try again.");
+    if (!savedToken || !txnId) {
+      console.log("[Callback] Missing token or txnId, redirecting to register");
+      setStatus("success");
+      setMessage("Redirecting...");
+      setTimeout(() => router.push("/kyc/register"), 1000);
       return;
     }
 
-    const token = localStorage.getItem("kyc_token");
-    if (!token) {
-      setStatus("error");
-      setMessage("Session expired. Please login again.");
+    if (!code) {
+      console.log("[Callback] Missing code from DigiLocker redirect, redirecting to register");
+      setStatus("success");
+      setMessage("Redirecting...");
+      setTimeout(() => router.push("/kyc/register"), 1000);
       return;
     }
 
-    const fetchEaadhaar = async () => {
-      try {
-        const res = await fetch("/api/kyc/aadhaar/digilocker/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            txnId: txnId || code,
-            aadhaarNumber: "",
-          }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
+    console.log("[Callback] Calling SSO eAadhaar API with txnId:", txnId, "code:", code);
+    fetch("/api/kyc/aadhaar/sso-eaadhaar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${savedToken}`,
+      },
+      body: JSON.stringify({ txnId, code }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("[Callback] eAadhaar response:", JSON.stringify({
+          success: data.success,
+          hasData: !!data.aadhaarData,
+          name: data.aadhaarData?.name,
+          error: data.error,
+        }));
+        if (data.success && data.aadhaarData?.name) {
+          localStorage.removeItem("digilocker_txnId");
+          setStatus("success");
+          setMessage("Aadhaar verified successfully via DigiLocker!");
+          setTimeout(() => router.push("/kyc/register"), 1500);
+        } else {
+          console.log("[Callback] eAadhaar failed:", data.error);
+          localStorage.removeItem("digilocker_txnId");
           setStatus("error");
-          setMessage(data.error || "Failed to verify Aadhaar. Please try again.");
-          return;
+          setMessage(data.error || "Failed to fetch Aadhaar data. Please try again.");
         }
-
-        setStatus("success");
-        setMessage("Aadhaar verified successfully via DigiLocker!");
-        setTimeout(() => {
-          router.push("/kyc/register");
-        }, 2000);
-      } catch {
+      })
+      .catch((err) => {
+        console.error("[Callback] Network error:", err);
+        localStorage.removeItem("digilocker_txnId");
         setStatus("error");
         setMessage("Network error. Please try again.");
-      }
-    };
-
-    fetchEaadhaar();
-  }, [searchParams, router]);
+      });
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -84,6 +90,7 @@ function CallbackContent() {
               </div>
               <h1 className="text-lg font-bold text-on-background">Verification Complete</h1>
               <p className="text-sm text-secondary">{message}</p>
+              <p className="text-xs text-on-surface-variant">Redirecting to KYC form...</p>
             </div>
           )}
 

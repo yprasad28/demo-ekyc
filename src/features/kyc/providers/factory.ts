@@ -1,8 +1,7 @@
-import type { AadhaarProvider, DigiLockerProvider, PanProvider } from "./interfaces";
+import type { AadhaarProvider, PanProvider } from "./interfaces";
 import { MockAadhaarProvider } from "./mock/aadhaar";
 import { MockPanProvider } from "./mock/pan";
 import { DecentroPanProvider } from "./decentro/pan";
-import { DecentroDigiLockerProvider } from "./decentro/aadhaar";
 import { SurepassAadhaarProvider } from "./surepass/aadhaar";
 
 export function createAadhaarProvider(): AadhaarProvider {
@@ -14,10 +13,6 @@ export function createAadhaarProvider(): AadhaarProvider {
     default:
       return new MockAadhaarProvider();
   }
-}
-
-export function createDigiLockerProvider(): DigiLockerProvider {
-  return new DecentroDigiLockerProvider();
 }
 
 export function createPanProvider(): PanProvider {
