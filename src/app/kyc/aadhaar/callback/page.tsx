@@ -23,7 +23,7 @@ function CallbackContent() {
       return;
     }
 
-    const refId = searchParams.get("reference_id") || searchParams.get("referenceId") || txnId;
+    const refId = searchParams.get("initiation_decentro_transaction_id") || txnId;
 
     let polls = 0;
 

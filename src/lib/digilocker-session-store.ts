@@ -1,13 +1,20 @@
-const sessionStore = new Map<string, string>();
+import { db } from "./db";
 
-export function storeDigiLockerSession(decentroTxnId: string, customerId: string): void {
-  sessionStore.set(decentroTxnId, customerId);
+export async function storeDigiLockerSession(decentroTxnId: string, customerId: string): Promise<void> {
+  const app = await db.findApplicationByCustomerId(customerId);
+  if (app) {
+    await db.updateApplication(app.id, { decentroTxnId });
+  }
 }
 
-export function getDigiLockerSession(decentroTxnId: string): string | undefined {
-  return sessionStore.get(decentroTxnId);
+export async function getDigiLockerSession(decentroTxnId: string): Promise<string | undefined> {
+  const app = await db.findApplicationByDecentroTxnId(decentroTxnId);
+  return app?.customerId;
 }
 
-export function removeDigiLockerSession(decentroTxnId: string): void {
-  sessionStore.delete(decentroTxnId);
+export async function removeDigiLockerSession(decentroTxnId: string): Promise<void> {
+  const app = await db.findApplicationByDecentroTxnId(decentroTxnId);
+  if (app) {
+    await db.updateApplication(app.id, { decentroTxnId: null });
+  }
 }

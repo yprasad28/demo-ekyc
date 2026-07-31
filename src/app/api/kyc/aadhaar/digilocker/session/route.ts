@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const session = await createUIStreamSession(mobile);
 
     if (session.txnId) {
-      storeDigiLockerSession(session.txnId, customerId);
+      await storeDigiLockerSession(session.txnId, customerId);
     }
 
     const ipAddress = getClientIp(req);

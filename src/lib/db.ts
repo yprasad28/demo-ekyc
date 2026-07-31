@@ -130,6 +130,25 @@ export const db = {
     }
   },
 
+  findApplicationByDecentroTxnId: async (txnId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findApplicationByDecentroTxnId(txnId);
+    try {
+      const app = await prisma.kycApplication.findFirst({
+        where: { decentroTxnId: txnId }
+      });
+      if (!app) return null;
+      return {
+        ...app,
+        aadhaarNumber: decryptIfNotNull(app.aadhaarNumber),
+        panNumber: decryptIfNotNull(app.panNumber),
+      };
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findApplicationByDecentroTxnId(txnId);
+    }
+  },
+
   findApplicationById: async (id: string) => {
     await ensureInit();
     if (useFallback) return mockDb.findApplicationById(id);

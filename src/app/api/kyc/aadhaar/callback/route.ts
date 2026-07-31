@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       console.log("[UIStream Callback] payload.data:", JSON.stringify(payload.data));
     }
 
-    const customerId = getDigiLockerSession(payload.initialDecentroTxnId);
+    const customerId = await getDigiLockerSession(payload.initialDecentroTxnId);
 
     if (!customerId) {
       console.error("[UIStream Callback] No customer found for txnId:", payload.initialDecentroTxnId);
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       ipAddress
     );
 
-    removeDigiLockerSession(payload.initialDecentroTxnId);
+    await removeDigiLockerSession(payload.initialDecentroTxnId);
 
     console.log("[UIStream Callback] Aadhaar verified for customer:", customerId);
 

@@ -58,6 +58,9 @@ model KycApplication {
   panMatchScore   Float?
   panStatus       String?
 
+  // DigiLocker UIStream session correlation
+  decentroTxnId  String?
+
   rejectionReason String?
   submittedAt     DateTime?
   createdAt       DateTime   @default(now())

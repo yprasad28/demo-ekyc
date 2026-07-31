@@ -28,6 +28,7 @@ export interface KycApplicationMock {
   aadhaarGender: string | null;
   aadhaarAddress: string | null;
   aadhaarPhoto: string | null;
+  decentroTxnId: string | null;
   panNumber: string | null;
   panName: string | null;
   panDob: string | null;
@@ -199,6 +200,11 @@ export const mockDb = {
     const app = db.kyc_applications.find(a => a.customerId === customerId) || null;
     return app ? decryptApplicationFields(app) : null;
   },
+  findApplicationByDecentroTxnId: (txnId: string): KycApplicationMock | null => {
+    const db = initDb();
+    const app = db.kyc_applications.find(a => a.decentroTxnId === txnId) || null;
+    return app ? decryptApplicationFields(app) : null;
+  },
   findApplicationById: (id: string): KycApplicationMock | null => {
     const db = initDb();
     const app = db.kyc_applications.find(a => a.id === id) || null;
@@ -220,6 +226,7 @@ export const mockDb = {
       aadhaarGender: null,
       aadhaarAddress: null,
       aadhaarPhoto: null,
+      decentroTxnId: null,
       panNumber: null,
       panName: null,
       panDob: null,
