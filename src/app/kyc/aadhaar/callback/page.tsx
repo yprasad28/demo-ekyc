@@ -2,7 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+
+const POLL_INTERVAL = 2000;
+const MAX_POLLS = 15;
 
 function CallbackContent() {
   const router = useRouter();
@@ -13,60 +15,58 @@ function CallbackContent() {
   useEffect(() => {
     const savedToken = localStorage.getItem("kyc_token");
     const txnId = localStorage.getItem("digilocker_txnId");
-    const code = searchParams.get("code");
-    console.log("[Callback] Token:", !!savedToken, "txnId:", txnId, "code:", code);
 
-    if (!savedToken || !txnId) {
-      console.log("[Callback] Missing token or txnId, redirecting to register");
+    if (!savedToken) {
       setStatus("success");
       setMessage("Redirecting...");
       setTimeout(() => router.push("/kyc/register"), 1000);
       return;
     }
 
-    if (!code) {
-      console.log("[Callback] Missing code from DigiLocker redirect, redirecting to register");
-      setStatus("success");
-      setMessage("Redirecting...");
-      setTimeout(() => router.push("/kyc/register"), 1000);
-      return;
-    }
+    const refId = searchParams.get("reference_id") || searchParams.get("referenceId") || txnId;
 
-    console.log("[Callback] Calling SSO eAadhaar API with txnId:", txnId, "code:", code);
-    fetch("/api/kyc/aadhaar/sso-eaadhaar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${savedToken}`,
-      },
-      body: JSON.stringify({ txnId, code }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("[Callback] eAadhaar response:", JSON.stringify({
-          success: data.success,
-          hasData: !!data.aadhaarData,
-          name: data.aadhaarData?.name,
-          error: data.error,
-        }));
-        if (data.success && data.aadhaarData?.name) {
+    let polls = 0;
+
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch("/api/kyc/aadhaar/fetch-data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${savedToken}`,
+          },
+          body: JSON.stringify({ referenceId: refId }),
+        });
+        const data = await res.json();
+
+        if (data.found) {
+          clearInterval(timer);
           localStorage.removeItem("digilocker_txnId");
           setStatus("success");
           setMessage("Aadhaar verified successfully via DigiLocker!");
           setTimeout(() => router.push("/kyc/register"), 1500);
-        } else {
-          console.log("[Callback] eAadhaar failed:", data.error);
+          return;
+        }
+
+        polls++;
+        if (polls >= MAX_POLLS) {
+          clearInterval(timer);
           localStorage.removeItem("digilocker_txnId");
           setStatus("error");
-          setMessage(data.error || "Failed to fetch Aadhaar data. Please try again.");
+          setMessage("Verification is taking longer than expected. Please go back and try again.");
         }
-      })
-      .catch((err) => {
-        console.error("[Callback] Network error:", err);
-        localStorage.removeItem("digilocker_txnId");
-        setStatus("error");
-        setMessage("Network error. Please try again.");
-      });
+      } catch {
+        polls++;
+        if (polls >= MAX_POLLS) {
+          clearInterval(timer);
+          localStorage.removeItem("digilocker_txnId");
+          setStatus("error");
+          setMessage("Network error. Please try again.");
+        }
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(timer);
   }, [router, searchParams]);
 
   return (
@@ -101,14 +101,9 @@ function CallbackContent() {
               </div>
               <h1 className="text-lg font-bold text-on-background">Verification Failed</h1>
               <p className="text-sm text-secondary">{message}</p>
-              <div className="flex gap-3">
-                <Link href="/kyc/register" className="btn-outline flex-1 text-center">
-                  Back to KYC
-                </Link>
-                <Link href="/kyc/register" className="btn-primary flex-1 text-center">
-                  Try Again
-                </Link>
-              </div>
+              <button onClick={() => router.push("/kyc/register")} className="btn-primary w-full">
+                Back to KYC
+              </button>
             </div>
           )}
         </div>

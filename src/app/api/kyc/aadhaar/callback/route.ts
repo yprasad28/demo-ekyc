@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       aadhaarAddress: aadhaarData.address,
       aadhaarPhoto: aadhaarData.photo,
       status: "IN_PROGRESS",
-      currentStep: 5,
+      currentStep: 6,
     });
 
     const ipAddress = getClientIp(req);

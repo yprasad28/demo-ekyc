@@ -7,14 +7,16 @@ function generateRefId(): string {
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-export async function createUIStreamSession(): Promise<DigiLockerSessionResult> {
+export async function createUIStreamSession(mobile?: string): Promise<DigiLockerSessionResult> {
   const result = await decentroRequest("/v2/kyc/workflows/uistream", {
     reference_id: generateRefId(),
     consent: true,
-    purpose: "KYC verification for account opening",
+    purpose: "Aadhaar verification",
     callback_url: `${appUrl}/api/kyc/aadhaar/callback`,
     redirect_url: `${appUrl}/kyc/aadhaar/callback`,
     uistream: "DIGILOCKER_AADHAAR",
+    additional_data: { mobile: mobile || "" },
+    clear_cookies: true,
   });
 
   const txnId = result.decentroTxnId || "";

@@ -19,7 +19,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = await createUIStreamSession();
+    const { mobile } = await req.json().catch(() => ({}));
+
+    const session = await createUIStreamSession(mobile);
 
     if (session.txnId) {
       storeDigiLockerSession(session.txnId, customerId);

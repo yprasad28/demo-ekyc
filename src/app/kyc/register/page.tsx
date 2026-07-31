@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "complete";
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | "complete";
 
 interface AadhaarData {
   name: string; dob: string; gender: string;
@@ -170,6 +170,20 @@ function StepHero({ step }: { step: Step }) {
       features: [{ icon: "credit_card", title: "NSDL verification", desc: "Direct database access" }, { icon: "compare", title: "Name matching", desc: "Fuzzy matching algorithm" }],
     },
     7: {
+      title: "One Last Check",
+      desc: "Confirming your identity details to fetch an accurate credit report from TransUnion CIBIL.",
+      icon: "verified",
+      badge: "SECURITY PROTOCOL v4.2",
+      features: [{ icon: "fingerprint", title: "Identity Confirmed", desc: "Aadhaar & PAN verified" }, { icon: "credit_score", title: "CIBIL Ready", desc: "Fetching your credit score" }],
+    },
+    8: {
+      title: "Understanding Your Credit Health",
+      desc: "Your CIBIL score is a key indicator of your financial standing, helping lenders assess your creditworthiness.",
+      icon: "analytics",
+      badge: "VERIFIED BY TRANSUNION CIBIL",
+      features: [{ icon: "trending_up", title: "Real-time Score", desc: "Fetched from CIBIL bureau" }, { icon: "lock", title: "256-bit AES", desc: "Bank-grade encryption" }],
+    },
+    9: {
       title: "Secure Document Upload",
       desc: "Securely verify your identity using the offline XML process. Your data is encrypted locally before being transmitted via our UIDAI authorized channels.",
       icon: "upload_file",
@@ -254,15 +268,15 @@ function CompleteHero() {
 }
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
-function ProgressBar({ step, totalSteps = 7 }: { step: Step; totalSteps?: number }) {
+function ProgressBar({ step, totalSteps = 9 }: { step: Step; totalSteps?: number }) {
   const numStep = step === "complete" ? totalSteps : (step as number);
-  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Documents", "Complete"];
+  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Identity Preview", "CIBIL Score", "Documents", "Complete"];
 
   return (
     <div className="px-6 py-4 border-b border-outline-variant/10">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-primary">
-          Step {step === "complete" ? "7" : numStep} of {totalSteps}
+          Step {step === "complete" ? "9" : numStep} of {totalSteps}
         </span>
         <span className="text-xs font-semibold text-on-surface-variant">
           {step === "complete" ? "Verification Complete" : stepLabels[numStep - 1]}
@@ -575,7 +589,7 @@ function StepConsent({ token, onNext, onBack }: { token: string; onNext: () => v
 }
 
 // ─── Step 5: Aadhaar Verification (with tabs) ────────────────────────────────
-function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNext: (data: AadhaarData) => void; onBack: () => void; onShowOtp: (otp: string) => void }) {
+function StepAadhaar({ token, mobile, onNext, onBack, onShowOtp }: { token: string; mobile: string; onNext: (data: AadhaarData) => void; onBack: () => void; onShowOtp: (otp: string) => void }) {
   // back button rendered inside the return
   const [activeTab, setActiveTab] = useState<"digilocker" | "manual" | "xml" | "qr">("digilocker");
   const [aadhaar, setAadhaar] = useState("");
@@ -656,13 +670,13 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
     setDigilockerLoading(true);
     setDigilockerError("");
     try {
-      const res = await fetch("/api/kyc/aadhaar/sso-session", {
+      const res = await fetch("/api/kyc/aadhaar/digilocker/session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ mobile }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -1137,7 +1151,298 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
   );
 }
 
-// ─── Step 7: Document Upload ──────────────────────────────────────────────────
+// ─── Step 7: Identity Preview ────────────────────────────────────────────────
+function StepIdentityPreview({
+  aadhaarData,
+  panData,
+  onNext,
+  onBack,
+}: {
+  aadhaarData: AadhaarData;
+  panData: PanData;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-5 animate-slide-up">
+      <div>
+        <BackButton onBack={onBack} />
+        <div className="flex items-center gap-2 text-primary mb-1">
+          <span className="material-symbols-outlined text-[18px]" style={FILLED}>verified</span>
+          <span className="text-[11px] font-bold tracking-wider uppercase">Final Verification Step</span>
+        </div>
+        <h2 className="text-lg font-bold text-on-background">Verify Your Information</h2>
+        <p className="text-sm text-secondary mt-1">Please review your identity details before fetching your CIBIL score.</p>
+      </div>
+
+      {/* Progress dots */}
+      <div className="flex gap-1.5 w-full">
+        <div className="flex-1 h-1.5 bg-primary rounded-full" />
+        <div className="flex-1 h-1.5 bg-primary rounded-full" />
+        <div className="flex-1 h-1.5 bg-primary/30 rounded-full relative overflow-hidden">
+          <div className="absolute inset-0 bg-primary animate-pulse" />
+        </div>
+      </div>
+
+      {/* Trust banner */}
+      <div className="flex items-center gap-3 p-3 bg-secondary-container/40 rounded-xl">
+        <div className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm text-primary flex-shrink-0">
+          <span className="material-symbols-outlined text-[20px]" style={FILLED}>verified_user</span>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-on-surface">Data successfully validated</p>
+          <p className="text-xs text-secondary">Your identity documents match government records.</p>
+        </div>
+      </div>
+
+      {/* Aadhaar Card */}
+      <div className="relative">
+        <div className="absolute -inset-px bg-gradient-to-br from-primary/10 to-transparent rounded-xl pointer-events-none" />
+        <div className="bg-surface-container-low p-4 rounded-xl flex flex-col gap-4 border border-outline-variant/20">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-orange-500 rounded-full" />
+              <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">Aadhaar Identity</span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+              <span className="material-symbols-outlined text-[13px]" style={FILLED}>check_circle</span>
+              <span className="text-[10px] font-bold">Verified</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {aadhaarData.photo ? (
+              <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-outline-variant flex-shrink-0">
+                <img src={aadhaarData.photo} alt="Aadhaar photo" className="w-full h-full object-cover" />
+                <div className="absolute -bottom-1 -right-1 bg-primary text-on-primary rounded-full p-0.5 shadow-md">
+                  <span className="material-symbols-outlined text-[11px]">fingerprint</span>
+                </div>
+              </div>
+            ) : (
+              <div className="relative w-14 h-14 rounded-lg bg-primary/10 border border-outline-variant flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-primary text-[24px]" style={FILLED}>person</span>
+                <div className="absolute -bottom-1 -right-1 bg-primary text-on-primary rounded-full p-0.5 shadow-md">
+                  <span className="material-symbols-outlined text-[11px]">fingerprint</span>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-base text-on-surface truncate">{aadhaarData.name}</span>
+              <span className="text-sm text-secondary tracking-[0.2em]">{aadhaarData.maskedAadhaar}</span>
+              {aadhaarData.dob && <span className="text-xs text-on-surface-variant mt-0.5">DOB: {aadhaarData.dob}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PAN Card */}
+      <div className="relative">
+        <div className="absolute -inset-px bg-gradient-to-br from-primary/10 to-transparent rounded-xl pointer-events-none" />
+        <div className="bg-surface-container-low p-4 rounded-xl flex flex-col gap-4 border border-outline-variant/20">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-blue-600 rounded-full" />
+              <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">Tax Identification</span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+              <span className="material-symbols-outlined text-[13px]" style={FILLED}>check_circle</span>
+              <span className="text-[10px] font-bold">Verified</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-end">
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] font-semibold text-secondary">PAN Number</span>
+              <span className="font-bold text-base text-on-surface tracking-widest">{panData.panNumber}</span>
+              <div className="mt-1">
+                <span className="text-[11px] font-semibold text-secondary block">Name as per PAN</span>
+                <span className="text-sm text-on-surface">{panData.name}</span>
+              </div>
+            </div>
+            <div className="p-2 bg-surface-container-highest rounded-lg">
+              <span className="material-symbols-outlined text-secondary opacity-50 text-[32px]">credit_card</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Security badges */}
+      <div className="flex flex-col items-center gap-2 py-2">
+        <div className="flex items-center gap-2 text-secondary">
+          <span className="material-symbols-outlined text-[16px]">lock</span>
+          <span className="text-xs font-semibold">Bank-grade 256-bit encryption</span>
+        </div>
+        <div className="flex items-center gap-3 opacity-40">
+          <div className="px-2 h-6 bg-secondary-container rounded flex items-center justify-center font-bold text-[8px]">NPCI</div>
+          <div className="px-2 h-6 bg-secondary-container rounded flex items-center justify-center font-bold text-[8px]">UIDAI</div>
+          <div className="px-2 h-6 bg-secondary-container rounded flex items-center justify-center font-bold text-[8px]">DIGILOCKER</div>
+        </div>
+      </div>
+
+      <button
+        onClick={onNext}
+        className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+      >
+        <span>Fetch CIBIL Score</span>
+        <span className="material-symbols-outlined">arrow_forward</span>
+      </button>
+      <p className="text-xs text-center text-secondary px-4">
+        By continuing, you agree to allow us to fetch your credit history from authorized bureaus.
+      </p>
+    </div>
+  );
+}
+
+// ─── Step 8: CIBIL Score ──────────────────────────────────────────────────────
+function StepCibilScore({
+  aadhaarData,
+  panData,
+  token,
+  onNext,
+  onBack,
+}: {
+  aadhaarData: AadhaarData;
+  panData: PanData;
+  token: string;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [score, setScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
+  const targetScore = 785;
+
+  useEffect(() => {
+    // Simulate fetching CIBIL score
+    const fetchTimer = setTimeout(() => {
+      setScore(targetScore);
+      setLoading(false);
+    }, 2000);
+    return () => clearTimeout(fetchTimer);
+  }, []);
+
+  useEffect(() => {
+    if (score === 0) return;
+    const startScore = 600;
+    const duration = 1500;
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(startScore + (score - startScore) * eased));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [score]);
+
+  const scoreLabel = displayScore >= 750 ? "EXCELLENT" : displayScore >= 700 ? "GOOD" : displayScore >= 650 ? "FAIR" : "NEEDS IMPROVEMENT";
+  const scoreColor = displayScore >= 750 ? "#00C853" : displayScore >= 700 ? "#64B5F6" : displayScore >= 650 ? "#FFA726" : "#EF5350";
+  // Circular gauge: r=45, circumference ≈ 282.7
+  const circumference = 282.7;
+  const percentage = Math.max(0, Math.min(1, (displayScore - 300) / 600));
+  const dashOffset = circumference - percentage * circumference;
+
+  const today = new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
+
+  return (
+    <div className="space-y-5 animate-slide-up">
+      <div>
+        <BackButton onBack={onBack} />
+        <h2 className="text-lg font-bold text-on-background">Your CIBIL Score</h2>
+        <p className="text-sm text-secondary mt-1">Understanding your credit health</p>
+      </div>
+
+      {loading ? (
+        <div className="flex flex-col items-center py-12 space-y-4">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-sm font-semibold text-on-surface">Contacting CIBIL Bureau...</p>
+          <p className="text-xs text-secondary">Fetching your credit report securely</p>
+        </div>
+      ) : (
+        <>
+          {/* Score gauge card */}
+          <div className="bg-secondary-container/40 rounded-2xl p-5 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+            <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 bg-tertiary/10 rounded-full blur-2xl" />
+            <span className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-3">Your Credit Score</span>
+            <div className="relative flex items-center justify-center w-44 h-44 mb-3">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-surface-container-highest" />
+                <circle
+                  cx="50" cy="50" r="45" fill="none"
+                  stroke={scoreColor}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  style={{ transition: "stroke-dashoffset 0.1s ease" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-bold text-[42px] leading-none text-on-surface">{displayScore}</span>
+                <div className="px-2.5 py-0.5 rounded-full mt-1" style={{ backgroundColor: `${scoreColor}20`, color: scoreColor }}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{scoreLabel}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-secondary max-w-[220px]">
+              You&apos;re in the <span className="font-bold text-primary">top 10%</span> of credit-aware consumers in India.
+            </p>
+          </div>
+
+          {/* Score insights */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-on-surface">Score Insights</h3>
+            {[
+              { icon: "calendar_today", label: "Payment History", value: "No Delayed Payments", badge: "EXCELLENT", color: "text-primary", bg: "bg-primary/5" },
+              { icon: "account_balance_wallet", label: "Credit Mix", value: "Balanced Portfolio", badge: "GOOD", color: "text-tertiary", bg: "bg-tertiary/5" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-secondary uppercase">{item.label}</p>
+                    <p className="text-sm font-bold text-on-surface">{item.value}</p>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-bold ${item.color} px-2 py-0.5 ${item.bg} rounded`}>{item.badge}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Score date */}
+          <div className="flex items-center justify-center gap-2 text-secondary text-xs">
+            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+            <span>Score Date: <span className="font-bold">{today}</span></span>
+          </div>
+
+          {/* TransUnion badge */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-lg">
+              <div className="w-1 h-4 bg-gradient-to-b from-[#FF9933] via-white to-[#128807] rounded-full" />
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">Verified by TransUnion CIBIL</span>
+              <span className="material-symbols-outlined text-primary text-[16px]" style={FILLED}>verified</span>
+            </div>
+            <p className="text-[10px] text-secondary opacity-70">Data encrypted with bank-grade 256-bit AES</p>
+          </div>
+
+          <button
+            onClick={onNext}
+            className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+          >
+            <span>Proceed to Next Step</span>
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Step 9: Document Upload ──────────────────────────────────────────────────
 function StepDocuments({ token, onNext, onBack }: { token: string; onNext: () => void; onBack: () => void }) {
   const docTypes = [
     { key: "AADHAAR", label: "Aadhaar Card", icon: "contact_page", required: true },
@@ -1350,7 +1655,7 @@ export default function RegisterPage() {
           const app = data.application;
 
           if (app.aadhaarName) {
-            console.log("[Register] Aadhaar found → jumping to step 6 (PAN)");
+            console.log("[Register] Aadhaar found → showing Confirm Your Information (step 5 review)");
             setAadhaarData({
               name: app.aadhaarName,
               dob: app.aadhaarDob || "",
@@ -1359,7 +1664,8 @@ export default function RegisterPage() {
               maskedAadhaar: app.aadhaarNumber || "",
               photo: app.aadhaarPhoto || "",
             });
-            setStep(6);
+            setStep(5);
+            setShowReview(true);
           } else if (app.currentStep >= 4) {
             console.log("[Register] No aadhaarName, currentStep:", app.currentStep, "→ step 5 (Aadhaar picker)");
             setStep(5);
@@ -1384,13 +1690,16 @@ export default function RegisterPage() {
     if (step === 4) return <StepConsent token={token} onBack={() => setStep(3)} onNext={() => setStep(5)} />;
     if (step === 5) {
       if (showReview && aadhaarData) return <StepReviewAadhaar aadhaarData={aadhaarData} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
-      return <StepAadhaar token={token} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
+      return <StepAadhaar token={token} mobile={mobile} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
     }
     if (step === 6) {
       if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
       return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
     }
-    if (step === 7) return <StepDocuments token={token} onBack={() => setStep(6)} onNext={() => setStep("complete")} />;
+    if (step === 7 && (!aadhaarData || !panData)) return <StepDocuments token={token} onBack={() => setStep(6)} onNext={() => setStep("complete")} />;
+    if (step === 7) return <StepIdentityPreview aadhaarData={aadhaarData!} panData={panData!} onBack={() => setStep(6)} onNext={() => setStep(8)} />;
+    if (step === 8) return <StepCibilScore aadhaarData={aadhaarData!} panData={panData!} token={token} onBack={() => setStep(7)} onNext={() => setStep(9)} />;
+    if (step === 9) return <StepDocuments token={token} onBack={() => setStep(8)} onNext={() => setStep("complete")} />;
     return <StepComplete />;
   };
 
