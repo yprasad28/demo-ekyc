@@ -1293,9 +1293,6 @@ function StepIdentityPreview({
 
 // ─── Step 8: CIBIL Score ──────────────────────────────────────────────────────
 function StepCibilScore({
-  aadhaarData: _aadhaarData,
-  panData: _panData,
-  token: _token,
   onNext,
   onBack,
 }: {
