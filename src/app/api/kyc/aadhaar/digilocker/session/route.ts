@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (auth instanceof NextResponse) return auth;
     const { customerId } = auth;
 
-    const limiter = rateLimit(`digilocker-session:${customerId}`, 3, 10 * 60 * 1000);
+    const limiter = rateLimit(`digilocker-session:${customerId}`, 5, 10 * 60 * 1000);
     if (!limiter.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Try again later." },
