@@ -22,6 +22,16 @@ export async function POST(req: NextRequest) {
       console.log("[UIStream Callback] NO Aadhaar data in payload!");
       console.log("[UIStream Callback] payload.data:", JSON.stringify(payload.data));
     }
+    if (payload.data?.PAN) {
+      console.log("[UIStream Callback] PAN data present:", !!payload.data.PAN.data);
+      console.log("[UIStream Callback] PAN name:", payload.data.PAN.data?.fullName);
+      console.log("[UIStream Callback] PAN number:", payload.data.PAN.data?.idNumber);
+    } else {
+      console.log("[UIStream Callback] NO PAN data in payload");
+    }
+    if (payload.data?.NAME_MATCH) {
+      console.log("[UIStream Callback] Name match:", payload.data.NAME_MATCH);
+    }
 
     const customerId = await getDigiLockerSession(payload.initialDecentroTxnId);
 
@@ -54,21 +64,35 @@ export async function POST(req: NextRequest) {
       aadhaarGender: aadhaarData.gender,
       aadhaarAddress: aadhaarData.address,
       aadhaarPhoto: aadhaarData.photo,
+      panNumber: aadhaarData.panData?.panNumber || null,
+      panName: aadhaarData.panData?.name || null,
+      panDob: aadhaarData.panData?.dob || null,
+      panStatus: aadhaarData.panData?.status || null,
+      panType: aadhaarData.panData?.panType || null,
+      panMatchScore: aadhaarData.nameMatchResult?.score || 0,
       status: "IN_PROGRESS",
       currentStep: 6,
     });
 
     const ipAddress = getClientIp(req);
+    const panInfo = aadhaarData.panData ? ` | PAN: ${aadhaarData.panData.panNumber}` : "";
+    const matchInfo = aadhaarData.nameMatchResult ? ` | Match: ${aadhaarData.nameMatchResult.score}%` : "";
     await db.createAuditLog(
       customerId,
       "AADHAAR_VERIFIED_DIGILOCKER",
-      `Aadhaar verified via DigiLocker UIStream: ${aadhaarData.maskedAadhaar}`,
+      `Aadhaar verified via DigiLocker UIStream: ${aadhaarData.maskedAadhaar}${panInfo}${matchInfo}`,
       ipAddress
     );
 
     await removeDigiLockerSession(payload.initialDecentroTxnId);
 
     console.log("[UIStream Callback] Aadhaar verified for customer:", customerId);
+    if (aadhaarData.panData) {
+      console.log("[UIStream Callback] PAN verified:", aadhaarData.panData.panNumber);
+    }
+    if (aadhaarData.nameMatchResult) {
+      console.log("[UIStream Callback] Name match score:", aadhaarData.nameMatchResult.score);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

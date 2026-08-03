@@ -25,7 +25,3 @@ export interface PanProfile {
   status: string;
   panType: string;
 }
-
-export interface PanProvider {
-  verifyPan(panNumber: string): Promise<PanProfile | null>;
-}

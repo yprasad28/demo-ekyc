@@ -11,12 +11,18 @@ export async function createUIStreamSession(mobile?: string): Promise<DigiLocker
   const result = await decentroRequest("/v2/kyc/workflows/uistream", {
     reference_id: generateRefId(),
     consent: true,
-    purpose: "Aadhaar verification",
+    purpose: "To perform KYC of the customer",
     callback_url: `${appUrl}/api/kyc/aadhaar/callback`,
     redirect_url: `${appUrl}/kyc/aadhaar/callback`,
-    uistream: "DIGILOCKER_AADHAAR",
+    uistream: "DIGILOCKER_AADHAAR_PAN",
     additional_data: { mobile: mobile || "" },
-    clear_cookies: true,
+    skip_survey: true,
+    disable_multiple_tabs: false,
+    language: "en",
+    force_aadhaar: false,
+    force_mobile: false,
+    clear_cookies: false,
+    enable_name_match: true,
   });
 
   const txnId = result.decentroTxnId || "";
@@ -79,11 +85,37 @@ export interface UIStreamCallbackPayload {
       };
       responseKey?: string;
     };
+    PAN?: {
+      decentroTxnId: string;
+      status: string;
+      responseCode: string;
+      message: string;
+      data: {
+        idNumber?: string;
+        idStatus?: string;
+        panStatus?: string;
+        category?: string;
+        firstName?: string;
+        lastName?: string;
+        fullName?: string;
+        dateOfBirth?: string;
+        aadhaarSeedingStatus?: string;
+      };
+      responseKey?: string;
+    };
+    NAME_MATCH?: {
+      aadhaarName?: string;
+      panName?: string;
+      matchScore?: number;
+      isMatch?: boolean;
+    };
   };
 }
 
 export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
   const aadhaar = payload.data?.AADHAAR;
+  const pan = payload.data?.PAN;
+  const nameMatch = payload.data?.NAME_MATCH;
 
   if (!aadhaar || aadhaar.status !== "SUCCESS" || !aadhaar.data) {
     return null;
@@ -107,6 +139,27 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
 
   const maskedAadhaar = uid ? uid.replace(/(\d{4})/g, "$1 ").trim() : "";
 
+  let panData = null;
+  if (pan && pan.status === "SUCCESS" && pan.data) {
+    panData = {
+      panNumber: pan.data.idNumber || "",
+      name: pan.data.fullName || "",
+      dob: pan.data.dateOfBirth || "",
+      status: pan.data.panStatus || "VALID",
+      panType: pan.data.category || "INDIVIDUAL",
+    };
+  }
+
+  let nameMatchResult = null;
+  if (nameMatch) {
+    nameMatchResult = {
+      score: nameMatch.matchScore || 0,
+      aadhaarName: nameMatch.aadhaarName || "",
+      panName: nameMatch.panName || "",
+      isMatch: nameMatch.isMatch || false,
+    };
+  }
+
   return {
     name,
     dob,
@@ -114,5 +167,7 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
     address,
     maskedAadhaar,
     photo: image || "",
+    panData,
+    nameMatchResult,
   };
 }

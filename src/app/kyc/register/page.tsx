@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
+import { FILLED, SubmitButton, GovBadge, InfoBanner } from "@/components/kyc/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | "complete";
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "complete";
 
 interface AadhaarData {
   name: string; dob: string; gender: string;
@@ -156,36 +156,29 @@ function StepHero({ step }: { step: Step }) {
       features: [{ icon: "policy", title: "RBI compliant", desc: "Following regulatory norms" }, { icon: "verified_user", title: "UIDAI authorized", desc: "Government approved" }],
     },
     5: {
-      title: "Verify your Aadhaar Details",
-      desc: "Securely link your identity using UIDAI's encrypted gateway. Your data is encrypted using AES-256 standards.",
+      title: "Verify Aadhaar & PAN Details",
+      desc: "Securely link your identity using DigiLocker. Your Aadhaar and PAN data is fetched directly from government databases.",
       icon: "fingerprint",
-      badge: "DATA PRIVACY GUARANTEED",
-      features: [{ icon: "fingerprint", title: "Biometric verification", desc: "UIDAI encrypted gateway" }, { icon: "lock", title: "AES-256 encryption", desc: "Bank-grade security" }],
+      badge: "DigiLocker VERIFIED",
+      features: [{ icon: "fingerprint", title: "Aadhaar verification", desc: "UIDAI encrypted gateway" }, { icon: "credit_card", title: "PAN verification", desc: "NSDL database access" }],
     },
     6: {
-      title: "Secure Identity Verification",
-      desc: "Your data is processed through encrypted channels directly with the Income Tax Department's database.",
-      icon: "credit_card",
-      badge: "GOVERNMENT VERIFICATION PORTAL",
-      features: [{ icon: "credit_card", title: "NSDL verification", desc: "Direct database access" }, { icon: "compare", title: "Name matching", desc: "Fuzzy matching algorithm" }],
+      title: "Identity Preview",
+      desc: "Review your verified identity details before proceeding to credit score check.",
+      icon: "verified",
+      badge: "IDENTITY CONFIRMED",
+      features: [{ icon: "fingerprint", title: "Aadhaar verified", desc: "DigiLocker confirmed" }, { icon: "credit_card", title: "PAN verified", desc: "NSDL database confirmed" }],
     },
     7: {
-      title: "One Last Check",
-      desc: "Confirming your identity details to fetch an accurate credit report from TransUnion CIBIL.",
-      icon: "verified",
-      badge: "SECURITY PROTOCOL v4.2",
-      features: [{ icon: "fingerprint", title: "Identity Confirmed", desc: "Aadhaar & PAN verified" }, { icon: "credit_score", title: "CIBIL Ready", desc: "Fetching your credit score" }],
-    },
-    8: {
       title: "Understanding Your Credit Health",
       desc: "Your CIBIL score is a key indicator of your financial standing, helping lenders assess your creditworthiness.",
       icon: "analytics",
-      badge: "VERIFIED BY TRANSUNION CIBIL",
-      features: [{ icon: "trending_up", title: "Real-time Score", desc: "Fetched from CIBIL bureau" }, { icon: "lock", title: "256-bit AES", desc: "Bank-grade encryption" }],
+      badge: "VERIFIED BY EQUIFAX BUREAU",
+      features: [{ icon: "trending_up", title: "Real-time Score", desc: "Fetched from credit bureau" }, { icon: "lock", title: "256-bit AES", desc: "Bank-grade encryption" }],
     },
-    9: {
+    8: {
       title: "Secure Document Upload",
-      desc: "Securely verify your identity using the offline XML process. Your data is encrypted locally before being transmitted via our UIDAI authorized channels.",
+      desc: "Securely upload your identity documents for final verification. Your data is encrypted locally before being transmitted.",
       icon: "upload_file",
       badge: "GOVERNMENT GRADE SECURE VAULT",
       features: [{ icon: "lock", title: "256-bit AES encryption", desc: "Bank-grade protection" }, { icon: "verified_user", title: "UIDAI Approved Path", desc: "Official verification" }],
@@ -270,7 +263,7 @@ function CompleteHero() {
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 function ProgressBar({ step, totalSteps = 9 }: { step: Step; totalSteps?: number }) {
   const numStep = step === "complete" ? totalSteps : (step as number);
-  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Identity Preview", "CIBIL Score", "Documents", "Complete"];
+  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar+PAN", "Identity Preview", "CIBIL Score", "Documents", "Complete"];
 
   return (
     <div className="px-6 py-4 border-b border-outline-variant/10">
@@ -969,118 +962,17 @@ function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData
   );
 }
 
-// ─── Step 6: PAN Verification (with tabs) ────────────────────────────────────
-function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string; onNext: (data: PanData, score: number, dobMatch: boolean) => void; onBack: () => void }) {
-  const [pan, setPan] = useState("");
-  const [dob, setDob] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [ocrRunning, setOcrRunning] = useState(false);
-
-  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  const panValid = panRegex.test(pan.toUpperCase());
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError("File size must be under 5MB."); return; }
-    setError("");
-    setUploadedFile(file);
-    setOcrRunning(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", "PAN");
-      await fetch("/api/kyc/upload", { method: "POST", headers: {"Authorization": `Bearer ${token}`}, body: formData });
-      const panMatch = file.name.toUpperCase().match(/[A-Z]{5}[0-9]{4}[A-Z]{1}/);
-      if (panMatch) setPan(panMatch[0]);
-    } catch {}
-    setOcrRunning(false);
-  };
-
-  const handleVerify = async () => {
-    if (!panValid) { setError("Please enter a valid PAN number."); return; }
-    if (!dob) { setError("Please select your date of birth."); return; }
-    setLoading(true); setError("");
-    try {
-      const res = await fetch("/api/kyc/pan/verify", {
-        method: "POST",
-        headers: {"Content-Type":"application/json","Authorization":`Bearer ${token}`},
-        body: JSON.stringify({ panNumber: pan.toUpperCase(), dob }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "PAN verification failed."); setLoading(false); return; }
-      onNext(data.panData, data.matchScore, data.dobMatch);
-    } catch { setError("Network error."); }
-    setLoading(false);
-  };
-
-  return (
-    <div className="space-y-5 animate-slide-up" onKeyDown={(e) => { if (e.key === "Enter" && !loading && panValid && dob) handleVerify(); }}>
-      <div>
-        <BackButton onBack={onBack} />
-        <h2 className="text-lg font-bold text-on-background">Verify your PAN details</h2>
-        <p className="text-sm text-secondary mt-1">Please provide your Permanent Account Number and Date of Birth as per your PAN Card.</p>
-      </div>
-      {/* Upload Card */}
-      <div className="space-y-4">
-        <label className="upload-zone cursor-pointer block">
-          <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-          <div className="flex flex-col items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[36px]">{ocrRunning ? "progress_activity" : "upload_file"}</span>
-            <p className="text-sm font-semibold text-on-surface">{ocrRunning ? "Uploading..." : "Upload PAN Card"}</p>
-            <p className="text-xs text-on-surface-variant">JPG, PNG, PDF — Max 5MB</p>
-          </div>
-          {uploadedFile && !ocrRunning && (
-            <p className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1 justify-center">
-              <span className="material-symbols-outlined text-[16px]" style={FILLED}>check_circle</span>{uploadedFile.name}
-            </p>
-          )}
-        </label>
-      </div>
-      <div className="space-y-4">
-        <div>
-          <label className="input-label">PAN Number</label>
-          <div className="relative">
-            <input className={`input-field uppercase font-mono tracking-widest pr-10 ${pan && !panValid ? "border-error" : pan && panValid ? "border-green-500" : ""}`}
-              type="text" maxLength={10} placeholder="ABCDE1234F" value={pan}
-              onChange={(e) => { setPan(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"")); setError(""); }} />
-            {pan && panValid && <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-green-600 text-[20px]" style={FILLED}>check_circle</span>}
-          </div>
-          <p className="text-[11px] text-on-surface-variant mt-1">Format: 5 letters, 4 numbers, 1 letter | e.g. ABCDE1234F</p>
-        </div>
-        <div>
-          <label className="input-label">Date of Birth</label>
-          <input className="input-field" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-          <p className="text-[11px] text-on-surface-variant mt-1">As mentioned in your official PAN card</p>
-        </div>
-        <MockDataHelper type="pan" />
-        {error && <p className="text-xs text-error">{error}</p>}
-      </div>
-      <SubmitButton loading={loading} onClick={handleVerify} disabled={loading || !panValid || !dob} icon="arrow_forward">
-        Verify & Proceed
-      </SubmitButton>
-      <div className="flex items-start gap-2 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/20">
-        <span className="material-symbols-outlined text-primary text-[16px] mt-0.5">info</span>
-        <p className="text-xs text-on-surface-variant">Ensure the card is clearly visible and well-lit. Reflection or blur may cause verification failure.</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 6b: Name Match ──────────────────────────────────────────────────────
-function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack, dobMatch = true }: { panData: PanData; matchScore: number; aadhaarName: string; token: string; onNext: () => void; onBack: () => void; dobMatch?: boolean }) {
+// ─── Step 5c: Review Aadhaar + PAN Combined ───────────────────────────────────
+function StepReviewCombined({ aadhaarData, panData, matchScore, token, onNext, onBack }: { aadhaarData: AadhaarData; panData: PanData; matchScore: number; token: string; onNext: () => void; onBack: () => void }) {
   const [loading, setLoading] = useState(false);
   const isGoodMatch = matchScore >= 60;
 
   const handleConfirm = async () => {
-    if (!isGoodMatch) return;
     setLoading(true);
     await fetch("/api/kyc/save-step", {
       method: "POST",
       headers: {"Content-Type":"application/json","Authorization":`Bearer ${token}`},
-      body: JSON.stringify({ step: 6 }),
+      body: JSON.stringify({ step: 5 }),
     });
     setLoading(false);
     onNext();
@@ -1089,69 +981,72 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
   return (
     <div className="space-y-5 animate-slide-up">
       <BackButton onBack={onBack} />
-      <div className="flex flex-col items-center text-center">
-        <div className="relative mb-4">
-          <div className="w-28 h-28 rounded-full border-4 border-primary/20 flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className={`text-3xl font-bold ${isGoodMatch ? "text-primary" : "text-red-500"}`}>{matchScore}%</span>
+      <div>
+        <h2 className="text-lg font-bold text-on-background">Review Your Information</h2>
+        <p className="text-sm text-secondary mt-1">Verify your Aadhaar and PAN details extracted from DigiLocker</p>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-100">
+        <span className="material-symbols-outlined text-green-600 text-[14px]" style={FILLED}>check_circle</span>
+        <span className="text-xs font-semibold text-green-700">Aadhaar + PAN Verified via DigiLocker</span>
+      </div>
+      <div className="card">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="material-symbols-outlined text-blue-600" style={FILLED}>fingerprint</span>
+          <h3 className="text-sm font-bold text-on-surface">Aadhaar Details</h3>
+        </div>
+        <div className="flex items-center gap-4">
+          {aadhaarData.photo && (
+            <img src={aadhaarData.photo} alt="Photo" className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
+          )}
+          <div className="flex-1 space-y-1">
+            <p className="text-sm font-bold text-on-surface">{aadhaarData.name}</p>
+            <p className="text-xs text-on-surface-variant">DOB: {aadhaarData.dob}</p>
+            <p className="text-xs text-on-surface-variant">{aadhaarData.maskedAadhaar}</p>
+          </div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="material-symbols-outlined text-orange-600" style={FILLED}>credit_card</span>
+          <h3 className="text-sm font-bold text-on-surface">PAN Details</h3>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-bold text-on-surface">{panData.name}</p>
+          <p className="text-xs text-on-surface-variant">DOB: {panData.dob}</p>
+          <p className="text-xs font-mono text-on-surface-variant">{panData.panNumber}</p>
+          <p className="text-xs text-on-surface-variant">Status: {panData.status}</p>
+        </div>
+      </div>
+      <div className={`card ${isGoodMatch ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className={`material-symbols-outlined ${isGoodMatch ? 'text-green-600' : 'text-red-600'}`} style={FILLED}>
+              {isGoodMatch ? 'check_circle' : 'warning'}
+            </span>
+            <div>
+              <p className="text-sm font-bold text-on-surface">Name Match</p>
+              <p className="text-xs text-on-surface-variant">{isGoodMatch ? 'Names match between Aadhaar and PAN' : 'Names do not match'}</p>
             </div>
           </div>
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-on-primary text-[10px] font-bold rounded-full">
-            {isGoodMatch ? "HIGH CONFIDENCE MATCH" : "LOW MATCH"}
-          </div>
-        </div>
-        <h2 className="text-lg font-bold text-on-background">Match Score</h2>
-        <p className="text-xs text-on-surface-variant mt-1">NAME MATCHING RESULT</p>
-      </div>
-      <div className="card space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl">
-          <span className="material-symbols-outlined text-blue-600 text-[20px]">fingerprint</span>
-          <div className="flex-1">
-            <p className="text-[11px] font-semibold text-on-surface-variant uppercase">Aadhaar Name</p>
-            <p className="text-sm font-bold text-on-surface">{aadhaarName}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl">
-          <span className="material-symbols-outlined text-orange-600 text-[20px]">credit_card</span>
-          <div className="flex-1">
-            <p className="text-[11px] font-semibold text-on-surface-variant uppercase">PAN Name</p>
-            <p className="text-sm font-bold text-on-surface">{panData.name}</p>
-          </div>
+          <span className={`text-2xl font-bold ${isGoodMatch ? 'text-green-600' : 'text-red-600'}`}>
+            {matchScore}%
+          </span>
         </div>
       </div>
-      {!isGoodMatch && (
-        <WarningBanner
-          title="Name Mismatch Warning"
-          message="A slight difference in naming was detected but successfully resolved through our fuzzy matching algorithm."
-          icon="warning"
-        />
-      )}
-      {!dobMatch && (
-        <WarningBanner
-          title="Date of Birth Mismatch"
-          message="The date of birth you entered does not match our records. Please verify and try again."
-          icon="error"
-        />
-      )}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-          <span className="material-symbols-outlined text-[14px] text-primary" style={FILLED}>lock</span>
-          Biometric data safe
-        </div>
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-          <span className="material-symbols-outlined text-[14px] text-green-600" style={FILLED}>verified</span>
-          License Check
-        </div>
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-lg border border-outline-variant/20">
+        <span className="material-symbols-outlined text-primary text-[14px]" style={FILLED}>lock</span>
+        <span className="text-xs font-semibold text-on-surface-variant">SECURITY</span>
+        <span className="text-xs text-on-surface-variant ml-1">Bank-grade encryption</span>
       </div>
       <SubmitButton loading={loading} onClick={handleConfirm} disabled={loading || !isGoodMatch} icon="arrow_forward">
-        Proceed to Next Step
+        Confirm & Proceed
       </SubmitButton>
-      <p className="text-xs text-center text-on-surface-variant">By clicking proceed, you agree to finalize your identity data.</p>
+      <p className="text-xs text-center text-on-surface-variant">By clicking, you consent to validating these details with the verification authority.</p>
     </div>
   );
 }
 
-// ─── Step 7: Identity Preview ────────────────────────────────────────────────
+// ─── Step 6: Identity Preview ────────────────────────────────────────────────
 function StepIdentityPreview({
   aadhaarData,
   panData,
@@ -1627,8 +1522,6 @@ export default function RegisterPage() {
   const [showReview, setShowReview] = useState(false);
   const [panData, setPanData] = useState<PanData | null>(null);
   const [matchScore, setMatchScore] = useState(0);
-  const [showMatch, setShowMatch] = useState(false);
-  const [dobMatch, setDobMatch] = useState(true);
   const [toastOtp, setToastOtp] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1661,6 +1554,17 @@ export default function RegisterPage() {
               maskedAadhaar: app.aadhaarNumber || "",
               photo: app.aadhaarPhoto || "",
             });
+            if (app.panNumber) {
+              console.log("[Register] PAN found → loading PAN data");
+              setPanData({
+                panNumber: app.panNumber,
+                name: app.panName || "",
+                dob: app.panDob || "",
+                status: app.panStatus || "VALID",
+                panType: app.panType || "INDIVIDUAL",
+              });
+              setMatchScore(app.panMatchScore || 0);
+            }
             setStep(5);
             setShowReview(true);
           } else if (app.currentStep >= 4) {
@@ -1686,17 +1590,18 @@ export default function RegisterPage() {
     if (step === 3) return <StepEmail token={token} onBack={() => setStep(2)} onNext={() => setStep(4)} />;
     if (step === 4) return <StepConsent token={token} onBack={() => setStep(3)} onNext={() => setStep(5)} />;
     if (step === 5) {
-      if (showReview && aadhaarData) return <StepReviewAadhaar aadhaarData={aadhaarData} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
+      if (showReview && aadhaarData) {
+        if (panData) {
+          return <StepReviewCombined aadhaarData={aadhaarData} panData={panData} matchScore={matchScore} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
+        }
+        return <StepReviewAadhaar aadhaarData={aadhaarData} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
+      }
       return <StepAadhaar token={token} mobile={mobile} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
     }
-    if (step === 6) {
-      if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
-      return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
-    }
-    if (step === 7 && (!aadhaarData || !panData)) return <StepDocuments token={token} onBack={() => setStep(6)} onNext={() => setStep("complete")} />;
-    if (step === 7) return <StepIdentityPreview aadhaarData={aadhaarData!} panData={panData!} onBack={() => setStep(6)} onNext={() => setStep(8)} />;
-    if (step === 8) return <StepCibilScore aadhaarData={aadhaarData!} panData={panData!} token={token} onBack={() => setStep(7)} onNext={() => setStep(9)} />;
-    if (step === 9) return <StepDocuments token={token} onBack={() => setStep(8)} onNext={() => setStep("complete")} />;
+    if (step === 6 && (!aadhaarData || !panData)) return <StepDocuments token={token} onBack={() => setStep(5)} onNext={() => setStep("complete")} />;
+    if (step === 6) return <StepIdentityPreview aadhaarData={aadhaarData!} panData={panData!} onBack={() => setStep(5)} onNext={() => setStep(7)} />;
+    if (step === 7) return <StepCibilScore aadhaarData={aadhaarData!} panData={panData!} token={token} onBack={() => setStep(6)} onNext={() => setStep(8)} />;
+    if (step === 8) return <StepDocuments token={token} onBack={() => setStep(7)} onNext={() => setStep("complete")} />;
     return <StepComplete />;
   };
 
