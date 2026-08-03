@@ -23,6 +23,7 @@ export async function createUIStreamSession(mobile?: string): Promise<DigiLocker
     force_mobile: false,
     clear_cookies: false,
     enable_name_match: true,
+    pan_optional: false,
   });
 
   const txnId = result.decentroTxnId || "";
@@ -86,11 +87,11 @@ export interface UIStreamCallbackPayload {
       responseKey?: string;
     };
     PAN?: {
-      decentroTxnId: string;
-      status: string;
-      responseCode: string;
-      message: string;
-      data: {
+      decentroTxnId?: string;
+      status?: string;
+      responseCode?: string;
+      message?: string;
+      data?: {
         idNumber?: string;
         idStatus?: string;
         panStatus?: string;
@@ -140,6 +141,7 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
   const maskedAadhaar = uid ? uid.replace(/(\d{4})/g, "$1 ").trim() : "";
 
   let panData = null;
+  let panError = null;
   if (pan && pan.status === "SUCCESS" && pan.data) {
     panData = {
       panNumber: pan.data.idNumber || "",
@@ -148,6 +150,8 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
       status: pan.data.panStatus || "VALID",
       panType: pan.data.category || "INDIVIDUAL",
     };
+  } else if (pan && pan.message) {
+    panError = pan.message;
   }
 
   let nameMatchResult = null;
@@ -168,6 +172,7 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
     maskedAadhaar,
     photo: image || "",
     panData,
+    panError,
     nameMatchResult,
   };
 }

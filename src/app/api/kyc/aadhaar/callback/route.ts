@@ -57,6 +57,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
+    const isPartialFetch = payload.responseKey === "success_uistream_partial_documents_fetch" ||
+      payload.responseKey === "success_uistream_partial_fetch_with_poller";
+    const panFailed = !aadhaarData.panData && (isPartialFetch || !!payload.data?.PAN?.message);
+
+    let panError = null;
+    if (panFailed) {
+      panError = aadhaarData.panError || payload.data?.PAN?.message || "PAN data could not be retrieved from DigiLocker. Please try again.";
+      console.error("[UIStream Callback] PAN fetch failed:", panError);
+    }
+
     await db.updateApplication(application.id, {
       aadhaarNumber: aadhaarData.maskedAadhaar,
       aadhaarName: aadhaarData.name,
@@ -70,17 +80,18 @@ export async function POST(req: NextRequest) {
       panStatus: aadhaarData.panData?.status || null,
       panType: aadhaarData.panData?.panType || null,
       panMatchScore: aadhaarData.nameMatchResult?.score || 0,
+      panError: panError,
       status: "IN_PROGRESS",
       currentStep: 6,
     });
 
     const ipAddress = getClientIp(req);
-    const panInfo = aadhaarData.panData ? ` | PAN: ${aadhaarData.panData.panNumber}` : "";
+    const panInfo = aadhaarData.panData ? ` | PAN: ${aadhaarData.panData.panNumber}` : (panFailed ? " | PAN: FAILED" : "");
     const matchInfo = aadhaarData.nameMatchResult ? ` | Match: ${aadhaarData.nameMatchResult.score}%` : "";
     await db.createAuditLog(
       customerId,
       "AADHAAR_VERIFIED_DIGILOCKER",
-      `Aadhaar verified via DigiLocker UIStream: ${aadhaarData.maskedAadhaar}${panInfo}${matchInfo}`,
+      `Aadhaar verified via DigiLocker UIStream: ${aadhaarData.maskedAadhaar}${panInfo}${matchInfo}${panFailed ? ` | PAN Error: ${panError}` : ""}`,
       ipAddress
     );
 
@@ -89,12 +100,14 @@ export async function POST(req: NextRequest) {
     console.log("[UIStream Callback] Aadhaar verified for customer:", customerId);
     if (aadhaarData.panData) {
       console.log("[UIStream Callback] PAN verified:", aadhaarData.panData.panNumber);
+    } else {
+      console.log("[UIStream Callback] PAN not available, panError:", panError);
     }
     if (aadhaarData.nameMatchResult) {
       console.log("[UIStream Callback] Name match score:", aadhaarData.nameMatchResult.score);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, panFailed, panError });
   } catch (error) {
     console.error("[UIStream Callback] Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

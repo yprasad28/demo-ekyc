@@ -869,12 +869,18 @@ function StepAadhaar({ token, mobile, onNext, onBack, onShowOtp }: { token: stri
 }
 
 // ─── Step 5b: Review Aadhaar ──────────────────────────────────────────────────
-function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData: AadhaarData; token: string; onNext: () => void; onBack: () => void }) {
+function StepReviewAadhaar({ aadhaarData, panError, token, onNext, onBack, onRetryPan }: { aadhaarData: AadhaarData; panError: string | null; token: string; onNext: () => void; onBack: () => void; onRetryPan: () => void }) {
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(aadhaarData.name);
   const [address, setAddress] = useState(aadhaarData.address);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [retrying, setRetrying] = useState(false);
+
+  const handleRetryPan = async () => {
+    setRetrying(true);
+    onRetryPan();
+  };
 
   const handleConfirm = async () => {
     if (!name.trim()) { setError("Name cannot be empty."); return; }
@@ -910,6 +916,25 @@ function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData
           <span className="text-xs font-semibold text-blue-700">Verified Document Source</span>
         </div>
       </div>
+      {panError && (
+        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-amber-600 text-[20px] mt-0.5" style={FILLED}>warning</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">PAN Verification Pending</p>
+              <p className="text-xs text-amber-700 mt-1">{panError}</p>
+              <button
+                onClick={handleRetryPan}
+                disabled={retrying}
+                className="mt-2 px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[14px]">{retrying ? "progress_activity" : "refresh"}</span>
+                {retrying ? "Retrying..." : "Retry PAN Verification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest rounded-lg border border-outline-variant/20">
         <span className="material-symbols-outlined text-primary text-[14px]" style={FILLED}>lock</span>
         <span className="text-xs font-semibold text-on-surface-variant">SECURITY</span>
@@ -1522,6 +1547,7 @@ export default function RegisterPage() {
   const [showReview, setShowReview] = useState(false);
   const [panData, setPanData] = useState<PanData | null>(null);
   const [matchScore, setMatchScore] = useState(0);
+  const [panError, setPanError] = useState<string | null>(null);
   const [toastOtp, setToastOtp] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1565,6 +1591,10 @@ export default function RegisterPage() {
               });
               setMatchScore(app.panMatchScore || 0);
             }
+            if (app.panError) {
+              console.log("[Register] PAN error:", app.panError);
+              setPanError(app.panError);
+            }
             setStep(5);
             setShowReview(true);
           } else if (app.currentStep >= 4) {
@@ -1594,7 +1624,21 @@ export default function RegisterPage() {
         if (panData) {
           return <StepReviewCombined aadhaarData={aadhaarData} panData={panData} matchScore={matchScore} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
         }
-        return <StepReviewAadhaar aadhaarData={aadhaarData} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
+        return <StepReviewAadhaar aadhaarData={aadhaarData} panError={panError} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} onRetryPan={async () => {
+          setPanError(null);
+          setPanData(null);
+          try {
+            const res = await fetch("/api/kyc/aadhaar/digilocker/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({ mobile }),
+            });
+            const data = await res.json();
+            if (data.sessionUrl) {
+              window.location.href = data.sessionUrl;
+            }
+          } catch {}
+        }} />;
       }
       return <StepAadhaar token={token} mobile={mobile} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
     }

@@ -35,6 +35,7 @@ export interface KycApplicationMock {
   panType: string | null;
   panMatchScore: number | null;
   panStatus: string | null;
+  panError: string | null;
   rejectionReason: string | null;
   submittedAt: string | null;
   createdAt: string;
@@ -233,6 +234,7 @@ export const mockDb = {
       panType: null,
       panMatchScore: null,
       panStatus: null,
+      panError: null,
       rejectionReason: null,
       submittedAt: null,
       createdAt: new Date().toISOString(),

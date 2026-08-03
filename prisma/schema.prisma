@@ -57,6 +57,7 @@ model KycApplication {
   panType         String?
   panMatchScore   Float?
   panStatus       String?
+  panError        String?
 
   // DigiLocker UIStream session correlation
   decentroTxnId  String?
