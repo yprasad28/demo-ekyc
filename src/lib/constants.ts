@@ -20,7 +20,6 @@ export const API = {
   VERIFY_OTP: "/api/auth/verify-otp",
   AADHAAR_OTP_SEND: "/api/kyc/aadhaar/otp-send",
   AADHAAR_OTP_VERIFY: "/api/kyc/aadhaar/otp-verify",
-  PAN_VERIFY: "/api/kyc/pan/verify",
   SAVE_STEP: "/api/kyc/save-step",
   UPLOAD: "/api/kyc/upload",
 } as const;
