@@ -15,7 +15,7 @@ export async function createUIStreamSession(mobile?: string): Promise<DigiLocker
     callback_url: `${appUrl}/api/kyc/aadhaar/callback`,
     redirect_url: `${appUrl}/kyc/aadhaar/callback`,
     uistream: "DIGILOCKER_AADHAAR_PAN",
-    additional_data: { mobile: mobile || "" },
+    additional_data: { mobile: mobile || "", pan_optional: false },
     skip_survey: true,
     disable_multiple_tabs: false,
     language: "en",
@@ -23,7 +23,6 @@ export async function createUIStreamSession(mobile?: string): Promise<DigiLocker
     force_mobile: false,
     clear_cookies: false,
     enable_name_match: true,
-    pan_optional: false,
   });
 
   const txnId = result.decentroTxnId || "";
