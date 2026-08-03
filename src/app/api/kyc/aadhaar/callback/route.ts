@@ -14,23 +14,51 @@ export async function POST(req: NextRequest) {
     console.log("[UIStream Callback] ===== POST RECEIVED =====");
     console.log("[UIStream Callback] txnId:", payload.initialDecentroTxnId);
     console.log("[UIStream Callback] status:", payload.status);
-    console.log("[UIStream Callback] full payload keys:", Object.keys(payload));
+    console.log("[UIStream Callback] responseKey:", payload.responseKey);
+
     if (payload.data?.AADHAAR) {
-      console.log("[UIStream Callback] Aadhaar data present:", !!payload.data.AADHAAR.data);
       console.log("[UIStream Callback] Aadhaar name:", payload.data.AADHAAR.data?.proofOfIdentity?.name);
-    } else {
-      console.log("[UIStream Callback] NO Aadhaar data in payload!");
-      console.log("[UIStream Callback] payload.data:", JSON.stringify(payload.data));
     }
     if (payload.data?.PAN) {
-      console.log("[UIStream Callback] PAN data present:", !!payload.data.PAN.data);
-      console.log("[UIStream Callback] PAN name:", payload.data.PAN.data?.fullName);
-      console.log("[UIStream Callback] PAN number:", payload.data.PAN.data?.idNumber);
-    } else {
-      console.log("[UIStream Callback] NO PAN data in payload");
+      console.log("[UIStream Callback] PAN name:", payload.data.PAN.userName);
+      console.log("[UIStream Callback] PAN number:", payload.data.PAN.idNumber);
+      console.log("[UIStream Callback] PAN dob:", payload.data.PAN.userDateOfBirth);
     }
-    if (payload.data?.NAME_MATCH) {
-      console.log("[UIStream Callback] Name match:", payload.data.NAME_MATCH);
+
+    // Handle poller callback - PAN data arrived after initial partial callback
+    if (payload.responseKey === "success_uistream_poller") {
+      console.log("[UIStream Callback] Poller callback received - updating PAN data");
+      const customerId = await getDigiLockerSession(payload.initialDecentroTxnId);
+      if (!customerId) {
+        console.error("[UIStream Callback] Poller: No customer found for txnId:", payload.initialDecentroTxnId);
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      }
+      const application = await db.findApplicationByCustomerId(customerId);
+      if (!application) {
+        console.error("[UIStream Callback] Poller: Application not found for customer:", customerId);
+        return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      }
+      const pan = payload.data?.PAN;
+      if (pan?.idNumber) {
+        await db.updateApplication(application.id, {
+          panNumber: pan.idNumber || null,
+          panName: pan.userName || null,
+          panDob: pan.userDateOfBirth || null,
+          panStatus: pan.documentStatus || "VALID",
+          panType: "INDIVIDUAL",
+          panError: null,
+        });
+        await db.createAuditLog(
+          customerId,
+          "PAN_VERIFIED_POLLER",
+          `PAN verified via DigiLocker poller: ${pan.idNumber} | Name: ${pan.userName}`,
+          getClientIp(req)
+        );
+        await removeDigiLockerSession(payload.initialDecentroTxnId);
+        console.log("[UIStream Callback] Poller: PAN updated successfully:", pan.idNumber);
+        return NextResponse.json({ success: true, pollerUpdate: true });
+      }
+      return NextResponse.json({ success: true, pollerUpdate: false });
     }
 
     const customerId = await getDigiLockerSession(payload.initialDecentroTxnId);

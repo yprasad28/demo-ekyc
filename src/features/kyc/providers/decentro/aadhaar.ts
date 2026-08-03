@@ -86,22 +86,17 @@ export interface UIStreamCallbackPayload {
       responseKey?: string;
     };
     PAN?: {
-      decentroTxnId?: string;
-      status?: string;
-      responseCode?: string;
+      idNumber?: string;
+      userName?: string;
+      userDateOfBirth?: string;
+      userGender?: string;
+      documentVerifiedOn?: string;
+      documentStatus?: string;
+      documentBase64?: string;
+      documentIssuer?: string;
+      documentName?: string;
+      documentType?: string;
       message?: string;
-      data?: {
-        idNumber?: string;
-        idStatus?: string;
-        panStatus?: string;
-        category?: string;
-        firstName?: string;
-        lastName?: string;
-        fullName?: string;
-        dateOfBirth?: string;
-        aadhaarSeedingStatus?: string;
-      };
-      responseKey?: string;
     };
     NAME_MATCH?: {
       aadhaarName?: string;
@@ -141,13 +136,13 @@ export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
 
   let panData = null;
   let panError = null;
-  if (pan && pan.status === "SUCCESS" && pan.data) {
+  if (pan && pan.idNumber && (pan.userName || pan.documentStatus)) {
     panData = {
-      panNumber: pan.data.idNumber || "",
-      name: pan.data.fullName || "",
-      dob: pan.data.dateOfBirth || "",
-      status: pan.data.panStatus || "VALID",
-      panType: pan.data.category || "INDIVIDUAL",
+      panNumber: pan.idNumber || "",
+      name: pan.userName || "",
+      dob: pan.userDateOfBirth || "",
+      status: pan.documentStatus || "VALID",
+      panType: "INDIVIDUAL",
     };
   } else if (pan && pan.message) {
     panError = pan.message;
