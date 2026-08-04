@@ -27,8 +27,12 @@ export async function POST(req: NextRequest) {
     }
     const { step, data } = parsed.data;
 
+    console.log("[save-step POST] customerId:", customerId, "step:", step);
     const application = await db.findApplicationByCustomerId(customerId);
-    if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    if (!application) {
+      console.error("[save-step POST] Application not found for customerId:", customerId);
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
 
     const updates: Record<string, unknown> = { currentStep: step };
     if (data) {

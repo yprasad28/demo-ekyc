@@ -83,15 +83,19 @@ export const db = {
 
   createCustomer: async (mobile: string) => {
     await ensureInit();
+    console.log("[db] createCustomer:", mobile.slice(0, 3) + "xxx", "useFallback:", useFallback);
     if (useFallback) return mockDb.createCustomer(mobile);
     try {
       const mobileHash = hashForLookup(mobile);
       const mobileEncrypted = encrypt(mobile);
-      return await prisma.customer.create({
+      const customer = await prisma.customer.create({
         data: { mobile: mobileEncrypted, mobileHash }
       });
+      console.log("[db] createCustomer: Prisma success, id:", customer.id);
+      return customer;
     } catch (e) {
-      console.error("Prisma error, falling back to mockDb:", e);
+      console.error("[db] createCustomer: Prisma FAILED:", e);
+      useFallback = true;
       return mockDb.createCustomer(mobile);
     }
   },
@@ -113,11 +117,13 @@ export const db = {
   // Applications
   findApplicationByCustomerId: async (customerId: string) => {
     await ensureInit();
+    console.log("[db] findApplicationByCustomerId:", customerId, "useFallback:", useFallback);
     if (useFallback) return mockDb.findApplicationByCustomerId(customerId);
     try {
       const app = await prisma.kycApplication.findUnique({
         where: { customerId }
       });
+      console.log("[db] Prisma findApplication result:", app ? "found id=" + app.id : "null");
       if (!app) return null;
       return {
         ...app,
@@ -170,13 +176,17 @@ export const db = {
 
   createApplication: async (customerId: string) => {
     await ensureInit();
+    console.log("[db] createApplication:", customerId, "useFallback:", useFallback);
     if (useFallback) return mockDb.createApplication(customerId);
     try {
-      return await prisma.kycApplication.create({
+      const app = await prisma.kycApplication.create({
         data: { customerId }
       });
+      console.log("[db] createApplication: Prisma success, id:", app.id);
+      return app;
     } catch (e) {
-      console.error("Prisma error, falling back to mockDb:", e);
+      console.error("[db] createApplication: Prisma FAILED:", e);
+      useFallback = true;
       return mockDb.createApplication(customerId);
     }
   },
