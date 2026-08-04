@@ -157,18 +157,18 @@ function ApplicationModal({
                 </div>
               ))}
             </div>
-            {/* Name Match */}
+            {/* Name & DOB Match */}
             {app.panMatchScore !== null && (
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-xs font-semibold text-on-surface-variant">Name Match Score</span>
-                  <span className={`text-xs font-bold ${app.panMatchScore >= 60 ? "text-green-600" : "text-red-500"}`}>
-                    {app.panMatchScore}% {app.panMatchScore >= 60 ? "✓" : "✗"}
+                  <span className="text-xs font-semibold text-on-surface-variant">Name & DOB Match Score</span>
+                  <span className={`text-xs font-bold ${app.panMatchScore >= 100 ? "text-green-600" : "text-red-500"}`}>
+                    {app.panMatchScore}% {app.panMatchScore >= 100 ? "✓" : "✗"}
                   </span>
                 </div>
                 <div className="h-2 bg-surface-container rounded-full overflow-hidden">
                   <div
-                    className={`h-2 rounded-full ${app.panMatchScore >= 80 ? "bg-green-500" : app.panMatchScore >= 60 ? "bg-yellow-500" : "bg-red-500"}`}
+                    className={`h-2 rounded-full ${app.panMatchScore >= 100 ? "bg-green-500" : "bg-red-500"}`}
                     style={{ width: `${app.panMatchScore}%` }}
                   />
                 </div>

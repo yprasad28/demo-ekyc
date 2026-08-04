@@ -6,6 +6,7 @@ import {
   type UIStreamCallbackPayload,
 } from "@/features/kyc/providers/decentro/aadhaar";
 import { getDigiLockerSession, removeDigiLockerSession } from "@/lib/digilocker-session-store";
+import { computeCombinedScore } from "@/lib/name-match";
 
 export async function POST(req: NextRequest) {
   try {
@@ -81,6 +82,23 @@ export async function POST(req: NextRequest) {
     if (!aadhaarData) {
       console.error("[UIStream Callback] Could not parse Aadhaar data");
       return NextResponse.json({ error: "Failed to parse Aadhaar data" }, { status: 400 });
+    }
+
+    // If Decentro didn't provide NAME_MATCH, compute our own using name + DOB
+    if (!aadhaarData.nameMatchResult && aadhaarData.name && aadhaarData.panData?.name) {
+      const score = computeCombinedScore(
+        aadhaarData.name,
+        aadhaarData.panData.name,
+        aadhaarData.dob,
+        aadhaarData.panData.dob
+      );
+      aadhaarData.nameMatchResult = {
+        score,
+        aadhaarName: aadhaarData.name,
+        panName: aadhaarData.panData.name,
+        isMatch: score === 100,
+      };
+      console.log("[UIStream Callback] Computed name+DOB match score:", score);
     }
 
     const application = await db.findApplicationByCustomerId(customerId);

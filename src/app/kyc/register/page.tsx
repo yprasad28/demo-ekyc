@@ -990,7 +990,7 @@ function StepReviewAadhaar({ aadhaarData, panError, token, onNext, onBack, onRet
 // ─── Step 5c: Review Aadhaar + PAN Combined ───────────────────────────────────
 function StepReviewCombined({ aadhaarData, panData, matchScore, token, onNext, onBack }: { aadhaarData: AadhaarData; panData: PanData; matchScore: number; token: string; onNext: () => void; onBack: () => void }) {
   const [loading, setLoading] = useState(false);
-  const isGoodMatch = matchScore >= 60;
+  const isGoodMatch = matchScore >= 100;
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -1049,8 +1049,8 @@ function StepReviewCombined({ aadhaarData, panData, matchScore, token, onNext, o
               {isGoodMatch ? 'check_circle' : 'warning'}
             </span>
             <div>
-              <p className="text-sm font-bold text-on-surface">Name Match</p>
-              <p className="text-xs text-on-surface-variant">{isGoodMatch ? 'Names match between Aadhaar and PAN' : 'Names do not match'}</p>
+              <p className="text-sm font-bold text-on-surface">Name & DOB Match</p>
+              <p className="text-xs text-on-surface-variant">{isGoodMatch ? 'Name and date of birth match between Aadhaar and PAN' : 'Name or date of birth do not match'}</p>
             </div>
           </div>
           <span className={`text-2xl font-bold ${isGoodMatch ? 'text-green-600' : 'text-red-600'}`}>
