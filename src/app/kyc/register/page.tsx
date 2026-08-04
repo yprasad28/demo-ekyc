@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { FILLED, SubmitButton, GovBadge, InfoBanner } from "@/components/kyc/ui";
+import { computeCombinedScore } from "@/lib/name-match";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "complete";
@@ -1590,6 +1591,18 @@ export default function RegisterPage() {
                 panType: app.panType || "INDIVIDUAL",
               });
               setMatchScore(app.panMatchScore || 0);
+              console.log("[Register] panMatchScore from DB:", app.panMatchScore);
+              // Client-side fallback: recompute if score is stale/missing
+              if ((!app.panMatchScore || app.panMatchScore === 0) && app.aadhaarName && app.panName) {
+                const recomputed = computeCombinedScore(
+                  app.aadhaarName, app.panName,
+                  app.aadhaarDob || "", app.panDob || ""
+                );
+                console.log("[Register] Recomputed match score (client):", recomputed,
+                  "| aadhaar:", app.aadhaarName, "| pan:", app.panName,
+                  "| aadhaarDob:", app.aadhaarDob, "| panDob:", app.panDob);
+                setMatchScore(recomputed);
+              }
             }
             if (app.panError) {
               console.log("[Register] PAN error:", app.panError);

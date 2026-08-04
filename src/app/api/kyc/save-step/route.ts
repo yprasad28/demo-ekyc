@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { TOTAL_STEPS } from "@/lib/constants";
 import { requireCustomerAuth } from "@/lib/auth";
 import { SaveStepSchema } from "@/lib/validators";
+import { computeCombinedScore } from "@/lib/name-match";
 
 const ALLOWED_STEP_FIELDS = [
   "aadhaarNumber", "aadhaarName", "aadhaarDob", "aadhaarGender",
@@ -67,6 +68,21 @@ export async function GET(req: NextRequest) {
     if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
 
     const documents = await db.findDocumentsByApplicationId(application.id);
+
+    // Recompute name+DOB match score if we have both names but score is stale/missing
+    if (application.aadhaarName && application.panName && (!application.panMatchScore || application.panMatchScore === 0)) {
+      const recomputedScore = computeCombinedScore(
+        application.aadhaarName,
+        application.panName,
+        application.aadhaarDob || "",
+        application.panDob || ""
+      );
+      console.log("[save-step] Recomputed match score:", recomputedScore,
+        "| aadhaar:", application.aadhaarName, "| pan:", application.panName,
+        "| aadhaarDob:", application.aadhaarDob, "| panDob:", application.panDob);
+      await db.updateApplication(application.id, { panMatchScore: recomputedScore });
+      application.panMatchScore = recomputedScore;
+    }
 
     return NextResponse.json({ success: true, application, documents });
   } catch (error) {
