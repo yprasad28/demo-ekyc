@@ -847,6 +847,8 @@ export const KycApplicationScalarFieldEnum = {
   panType: 'panType',
   panMatchScore: 'panMatchScore',
   panStatus: 'panStatus',
+  panError: 'panError',
+  decentroTxnId: 'decentroTxnId',
   rejectionReason: 'rejectionReason',
   submittedAt: 'submittedAt',
   createdAt: 'createdAt',
