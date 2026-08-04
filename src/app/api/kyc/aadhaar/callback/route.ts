@@ -18,6 +18,10 @@ export async function POST(req: NextRequest) {
 
     if (payload.data?.AADHAAR) {
       console.log("[UIStream Callback] Aadhaar name:", payload.data.AADHAAR.data?.proofOfIdentity?.name);
+    } else if (payload.data?.EAADHAAR) {
+      console.log("[UIStream Callback] EAADHAAR name:", payload.data.EAADHAAR.data?.proofOfIdentity?.name);
+    } else {
+      console.log("[UIStream Callback] NO Aadhaar data in payload");
     }
     if (payload.data?.PAN) {
       console.log("[UIStream Callback] PAN name:", payload.data.PAN.userName);

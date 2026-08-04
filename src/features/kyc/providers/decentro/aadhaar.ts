@@ -85,6 +85,39 @@ export interface UIStreamCallbackPayload {
       };
       responseKey?: string;
     };
+    EAADHAAR?: {
+      decentroTxnId: string;
+      status: string;
+      responseCode: string;
+      message: string;
+      data: {
+        aadhaarUid?: string;
+        proofOfIdentity?: {
+          dob?: string;
+          gender?: string;
+          name?: string;
+          hashedMobileNumber?: string;
+        };
+        proofOfAddress?: {
+          careOf?: string;
+          country?: string;
+          district?: string;
+          house?: string;
+          landmark?: string;
+          locality?: string;
+          pincode?: string;
+          postOffice?: string;
+          state?: string;
+          street?: string;
+          subDistrict?: string;
+          vtc?: string;
+        };
+        image?: string;
+        pdf?: string;
+        xml?: string;
+      };
+      responseKey?: string;
+    };
     PAN?: {
       idNumber?: string;
       userName?: string;
@@ -108,7 +141,7 @@ export interface UIStreamCallbackPayload {
 }
 
 export function parseUIStreamCallback(payload: UIStreamCallbackPayload) {
-  const aadhaar = payload.data?.AADHAAR;
+  const aadhaar = payload.data?.AADHAAR || payload.data?.EAADHAAR;
   const pan = payload.data?.PAN;
   const nameMatch = payload.data?.NAME_MATCH;
 
