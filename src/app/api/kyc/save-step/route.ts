@@ -80,8 +80,12 @@ export async function GET(req: NextRequest) {
       console.log("[save-step] Recomputed match score:", recomputedScore,
         "| aadhaar:", application.aadhaarName, "| pan:", application.panName,
         "| aadhaarDob:", application.aadhaarDob, "| panDob:", application.panDob);
-      await db.updateApplication(application.id, { panMatchScore: recomputedScore });
+      // Set on local object FIRST so response always has correct score
       application.panMatchScore = recomputedScore;
+      // DB update is fire-and-forget — don't let it block the response
+      db.updateApplication(application.id, { panMatchScore: recomputedScore }).catch((e) =>
+        console.error("[save-step] Failed to persist recomputed score:", e)
+      );
     }
 
     return NextResponse.json({ success: true, application, documents });

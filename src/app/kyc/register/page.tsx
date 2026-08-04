@@ -2,7 +2,36 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { FILLED, SubmitButton, GovBadge, InfoBanner } from "@/components/kyc/ui";
-import { computeCombinedScore } from "@/lib/name-match";
+
+// ─── Inline name+DOB match scoring (no module import needed) ─────────────────
+function computeMatchScore(aadhaarName: string, panName: string, aadhaarDob: string, panDob: string): number {
+  const normalizeName = (n: string) => n.toLowerCase().trim().replace(/\s+/g, " ");
+  const normalizeDob = (dob: string): string | null => {
+    if (!dob) return null;
+    const t = dob.trim();
+    const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    const p = t.split(/[\/\-]/);
+    if (p.length === 3 && p[0].length === 2 && p[1].length === 2 && p[2].length === 4) {
+      return `${p[2]}-${p[1]}-${p[0]}`;
+    }
+    return null;
+  };
+  const a = normalizeName(aadhaarName);
+  const b = normalizeName(panName);
+  const nameScore = a === b ? 100 : (() => {
+    const aT = new Set(a.split(" "));
+    const bT = new Set(b.split(" "));
+    let inter = 0;
+    aT.forEach((t) => { if (bT.has(t)) inter++; });
+    const union = new Set([...Array.from(aT), ...Array.from(bT)]).size;
+    return union === 0 ? 0 : Math.round((inter / union) * 100);
+  })();
+  const dA = normalizeDob(aadhaarDob);
+  const dB = normalizeDob(panDob);
+  const dobScore = dA && dB && dA === dB ? 100 : 0;
+  return Math.round(nameScore * 0.6 + dobScore * 0.4);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "complete";
@@ -1594,7 +1623,7 @@ export default function RegisterPage() {
               console.log("[Register] panMatchScore from DB:", app.panMatchScore);
               // Client-side fallback: recompute if score is stale/missing
               if ((!app.panMatchScore || app.panMatchScore === 0) && app.aadhaarName && app.panName) {
-                const recomputed = computeCombinedScore(
+                const recomputed = computeMatchScore(
                   app.aadhaarName, app.panName,
                   app.aadhaarDob || "", app.panDob || ""
                 );
