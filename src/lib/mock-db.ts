@@ -34,6 +34,14 @@ export interface KycApplicationMock {
   panType: string | null;
   panMatchScore: number | null;
   panStatus: string | null;
+  panError: string | null;
+  // Credit Score data
+  creditScore: number | null;
+  creditScoreBureau: string | null;
+  creditScoreCategory: string | null;
+  creditScoreDate: string | null;
+  // DigiLocker session
+  decentroTxnId: string | null;
   rejectionReason: string | null;
   submittedAt: string | null;
   createdAt: string;
@@ -226,6 +234,12 @@ export const mockDb = {
       panType: null,
       panMatchScore: null,
       panStatus: null,
+      panError: null,
+      creditScore: null,
+      creditScoreBureau: null,
+      creditScoreCategory: null,
+      creditScoreDate: null,
+      decentroTxnId: null,
       rejectionReason: null,
       submittedAt: null,
       createdAt: new Date().toISOString(),

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "complete";
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "test-bypass" | "complete";
 
 interface AadhaarData {
   name: string; dob: string; gender: string;
@@ -254,15 +254,15 @@ function CompleteHero() {
 }
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
-function ProgressBar({ step, totalSteps = 7 }: { step: Step; totalSteps?: number }) {
+function ProgressBar({ step, totalSteps = 8 }: { step: Step; totalSteps?: number }) {
   const numStep = step === "complete" ? totalSteps : (step as number);
-  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Documents", "Complete"];
+  const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Credit Score", "Documents", "Complete"];
 
   return (
     <div className="px-6 py-4 border-b border-outline-variant/10">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-primary">
-          Step {step === "complete" ? "7" : numStep} of {totalSteps}
+          Step {step === "complete" ? "8" : numStep} of {totalSteps}
         </span>
         <span className="text-xs font-semibold text-on-surface-variant">
           {step === "complete" ? "Verification Complete" : stepLabels[numStep - 1]}
@@ -1140,7 +1140,389 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
   );
 }
 
-// ─── Step 7: Document Upload ──────────────────────────────────────────────────
+// ─── Step 7: CIBIL Score ──────────────────────────────────────────────────────
+function StepCibilScore({
+  aadhaarData,
+  panData,
+  token,
+  onNext,
+  onBack,
+}: {
+  aadhaarData: AadhaarData;
+  panData: PanData;
+  token: string;
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "noHistory" | "error">("idle");
+  const [score, setScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
+  const [category, setCategory] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleFetchScore = async () => {
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/kyc/credit-score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMessage(data.error || "Failed to fetch credit score.");
+        return;
+      }
+
+      if (data.noHistory) {
+        setStatus("noHistory");
+        return;
+      }
+
+      if (data.success && data.score) {
+        setScore(data.score);
+        setCategory(data.category);
+        setStatus("success");
+      } else {
+        setStatus("error");
+        setErrorMessage("Unexpected response from server.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMessage("Network error. Please try again.");
+    }
+  };
+
+  // Animate score counter
+  useEffect(() => {
+    if (score === 0) return;
+    const startScore = 300;
+    const duration = 1500;
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(startScore + (score - startScore) * eased));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [score]);
+
+  const scoreLabel = category || (displayScore >= 750 ? "EXCELLENT" : displayScore >= 700 ? "GOOD" : displayScore >= 650 ? "FAIR" : "NEEDS IMPROVEMENT");
+  const scoreColor = category === "EXCELLENT" ? "#00C853" : category === "GOOD" ? "#64B5F6" : category === "FAIR" ? "#FFA726" : "#EF5350";
+
+  // Circular gauge
+  const circumference = 282.7;
+  const percentage = Math.max(0, Math.min(1, (displayScore - 300) / 600));
+  const dashOffset = circumference - percentage * circumference;
+
+  const today = new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
+
+  return (
+    <div className="space-y-5 animate-slide-up">
+      <div>
+        <BackButton onBack={onBack} />
+        <h2 className="text-lg font-bold text-on-background">Your Credit Score</h2>
+        <p className="text-sm text-secondary mt-1">Fetched from Equifax Bureau (Soft enquiry — no score impact)</p>
+      </div>
+
+      {/* Idle State — Fetch Button */}
+      {status === "idle" && (
+        <div className="space-y-4">
+          <div className="card text-center py-6">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-primary text-[32px]" style={FILLED}>analytics</span>
+            </div>
+            <p className="text-sm font-semibold text-on-surface mb-2">Credit Score Check</p>
+            <p className="text-xs text-on-surface-variant mb-4">
+              We&apos;ll fetch your credit score from Equifax using your Aadhaar name and mobile number. This is a soft enquiry and will NOT impact your score.
+            </p>
+            <button
+              onClick={handleFetchScore}
+              className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+            >
+              <span className="material-symbols-outlined text-[20px]">credit_score</span>
+              Fetch Credit Score
+            </button>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-xl border border-green-100">
+            <span className="material-symbols-outlined text-green-600 text-[16px]" style={FILLED}>verified</span>
+            <p className="text-xs font-medium text-green-700">Soft enquiry — No impact on your credit score</p>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {status === "loading" && (
+        <div className="flex flex-col items-center py-12 space-y-4">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-sm font-semibold text-on-surface">Fetching from Equifax...</p>
+          <p className="text-xs text-secondary">This may take a few seconds</p>
+        </div>
+      )}
+
+      {/* Success State */}
+      {status === "success" && (
+        <>
+          {/* Score gauge card */}
+          <div className="bg-secondary-container/40 rounded-2xl p-5 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+            <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 bg-tertiary/10 rounded-full blur-2xl" />
+            <span className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-3">Your Credit Score</span>
+            <div className="relative flex items-center justify-center w-44 h-44 mb-3">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-surface-container-highest" />
+                <circle
+                  cx="50" cy="50" r="45" fill="none"
+                  stroke={scoreColor}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  style={{ transition: "stroke-dashoffset 0.1s ease" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-bold text-[42px] leading-none text-on-surface">{displayScore}</span>
+                <div className="px-2.5 py-0.5 rounded-full mt-1" style={{ backgroundColor: `${scoreColor}20`, color: scoreColor }}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{scoreLabel}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-secondary max-w-[220px]">
+              {score >= 750
+                ? "Excellent! You have a strong credit profile."
+                : score >= 700
+                ? "Good credit health. Keep maintaining it."
+                : score >= 650
+                ? "Fair score. There's room for improvement."
+                : "Your credit score needs attention."}
+            </p>
+          </div>
+
+          {/* Score details */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-on-surface">Score Details</h3>
+            {[
+              { icon: "business", label: "Bureau", value: "Equifax" },
+              { icon: "calendar_today", label: "Report Date", value: today },
+              { icon: "info", label: "Enquiry Type", value: "Soft Pull (No Impact)" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                  </div>
+                  <p className="text-xs font-semibold text-on-surface-variant uppercase">{item.label}</p>
+                </div>
+                <span className="text-sm font-bold text-on-surface">{item.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Equifax badge */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-lg">
+              <div className="w-1 h-4 bg-gradient-to-b from-[#FF9933] via-white to-[#128807] rounded-full" />
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">Verified by Equifax Bureau</span>
+              <span className="material-symbols-outlined text-primary text-[16px]" style={FILLED}>verified</span>
+            </div>
+            <p className="text-[10px] text-secondary opacity-70">Data encrypted with bank-grade 256-bit AES</p>
+          </div>
+
+          <button
+            onClick={onNext}
+            className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+          >
+            <span>Proceed to Next Step</span>
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </>
+      )}
+
+      {/* No Credit History */}
+      {status === "noHistory" && (
+        <div className="space-y-4">
+          <div className="card text-center py-6">
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-amber-600 text-[32px]" style={FILLED}>info</span>
+            </div>
+            <p className="text-sm font-semibold text-on-surface mb-2">No Credit History Found</p>
+            <p className="text-xs text-on-surface-variant mb-4">
+              We couldn&apos;t find a credit score for you with Equifax. This is common for first-time borrowers or those without existing credit accounts.
+            </p>
+            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 mb-4">
+              <p className="text-xs text-blue-700 font-medium">
+                You can still proceed with KYC verification. Your credit score can be checked later when you apply for credit products.
+              </p>
+            </div>
+            <button
+              onClick={onNext}
+              className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+            >
+              <span>Skip & Continue</span>
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {status === "error" && (
+        <div className="space-y-4">
+          <div className="card text-center py-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-red-600 text-[32px]" style={FILLED}>error</span>
+            </div>
+            <p className="text-sm font-semibold text-on-surface mb-2">Unable to Fetch Score</p>
+            <p className="text-xs text-on-surface-variant mb-4">{errorMessage}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleFetchScore}
+                className="flex-1 h-[48px] bg-surface-container rounded-full flex items-center justify-center gap-2 font-bold text-sm text-on-surface border border-outline-variant/30 active:scale-[0.98] transition-transform"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                Retry
+              </button>
+              <button
+                onClick={onNext}
+                className="flex-1 h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+              >
+                <span>Skip</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Test Bypass: Skip to Credit Score ────────────────────────────────────────
+function StepTestBypass({
+  mobile,
+  token,
+  onNext,
+  onBack,
+}: {
+  mobile: string;
+  token: string;
+  onNext: (name: string) => void;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
+  const handleProceed = async () => {
+    if (!name.trim()) {
+      setError("Please enter a name for Credit Score API test.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/kyc/save-step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ step: 5, data: { aadhaarName: name.trim() } }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to save name. Try again.");
+        setSaving(false);
+        return;
+      }
+      onNext(name.trim());
+    } catch {
+      setError("Network error. Please try again.");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5 animate-slide-up">
+      <div>
+        <BackButton onBack={onBack} />
+        <h2 className="text-lg font-bold text-on-background">Test Mode — Credit Score API</h2>
+        <p className="text-sm text-secondary mt-1">Skip DigiLocker and directly test the real Credit Score API</p>
+      </div>
+
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-600 text-[20px] mt-0.5" style={FILLED}>warning</span>
+          <div>
+            <p className="text-xs font-semibold text-amber-800">Test Mode Active</p>
+            <p className="text-xs text-amber-700 mt-1">
+              This bypasses Aadhaar/PAN verification. The name you enter will be sent to the real Decentro Credit Score API.
+              A transaction will appear in your Decentro dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="card space-y-4">
+        <div>
+          <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Mobile (from Step 1)</label>
+          <div className="mt-1 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <span className="text-sm font-mono text-on-surface">+91 {mobile}</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Name for Credit Score API</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => { setName(e.target.value); setError(""); }}
+            placeholder="Enter full name as per credit bureau"
+            className="mt-1 w-full px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20 text-sm text-on-surface placeholder:text-secondary focus:outline-none focus:border-primary transition-colors"
+          />
+          {error && <p className="text-xs text-error mt-1">{error}</p>}
+        </div>
+
+        <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+          <p className="text-xs text-blue-700 font-medium">
+            The API will match this name + mobile with Equifax bureau records.
+            If no match is found, you&apos;ll see "No credit history".
+          </p>
+        </div>
+      </div>
+
+      <button
+        onClick={handleProceed}
+        disabled={saving}
+        className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform disabled:opacity-50"
+      >
+        {saving ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Saving...</span>
+          </>
+        ) : (
+          <>
+            <span>Skip to Credit Score</span>
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ─── Step 8: Document Upload ──────────────────────────────────────────────────
 function StepDocuments({ token, onNext, onBack }: { token: string; onNext: () => void; onBack: () => void }) {
   const docTypes = [
     { key: "AADHAAR", label: "Aadhaar Card", icon: "contact_page", required: true },
@@ -1331,6 +1713,7 @@ export default function RegisterPage() {
   const [showMatch, setShowMatch] = useState(false);
   const [dobMatch, setDobMatch] = useState(true);
   const [toastOtp, setToastOtp] = useState<string | null>(null);
+  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("kyc_token");
@@ -1341,7 +1724,21 @@ export default function RegisterPage() {
 
   const stepContent = () => {
     if (step === 1) return <StepMobile onNext={(mob) => { setMobile(mob); setStep(2); }} onShowOtp={(otp) => setToastOtp(otp)} />;
-    if (step === 2) return <StepOTP mobile={mobile} onBack={() => setStep(1)} onNext={() => setStep(3)} onShowOtp={(otp) => setToastOtp(otp)} />;
+    if (step === 2) return <StepOTP mobile={mobile} onBack={() => setStep(1)} onNext={() => { const freshToken = localStorage.getItem("kyc_token"); if (freshToken) setToken(freshToken); setStep(testMode ? "test-bypass" : 3); }} onShowOtp={(otp) => setToastOtp(otp)} />;
+    if (step === "test-bypass") {
+      return (
+        <StepTestBypass
+          mobile={mobile}
+          token={token}
+          onBack={() => setStep(2)}
+          onNext={(name) => {
+            setAadhaarData({ name, dob: "", gender: "", address: "", maskedAadhaar: "", photo: "" });
+            setPanData({ panNumber: "", name, dob: "", status: "TEST", panType: "INDIVIDUAL" });
+            setStep(7);
+          }}
+        />
+      );
+    }
     if (step === 3) return <StepEmail token={token} onBack={() => setStep(2)} onNext={() => setStep(4)} />;
     if (step === 4) return <StepConsent token={token} onBack={() => setStep(3)} onNext={() => setStep(5)} />;
     if (step === 5) {
@@ -1352,7 +1749,8 @@ export default function RegisterPage() {
       if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
       return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
     }
-    if (step === 7) return <StepDocuments token={token} onBack={() => setStep(6)} onNext={() => setStep("complete")} />;
+    if (step === 7) return <StepCibilScore aadhaarData={aadhaarData!} panData={panData!} token={token} onBack={() => setStep(testMode ? "test-bypass" : 6)} onNext={() => setStep(8)} />;
+    if (step === 8) return <StepDocuments token={token} onBack={() => setStep(7)} onNext={() => setStep("complete")} />;
     return <StepComplete />;
   };
 
@@ -1368,6 +1766,24 @@ export default function RegisterPage() {
             {stepContent()}
           </div>
         </main>
+        {/* Test Mode Toggle */}
+        {step !== "complete" && step !== "test-bypass" && (
+          <div className="w-full max-w-md mx-auto px-5 pb-4">
+            <button
+              onClick={() => setTestMode(!testMode)}
+              className={`w-full py-2 px-4 rounded-lg text-xs font-semibold transition-all ${
+                testMode
+                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                  : "bg-surface-container-low text-secondary border border-outline-variant/20 hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px] align-middle mr-1">
+                {testMode ? "science" : "science"}
+              </span>
+              {testMode ? "Test Mode ON — Skip DigiLocker" : "Enable Test Mode (skip DigiLocker)"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

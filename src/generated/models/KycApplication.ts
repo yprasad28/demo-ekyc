@@ -29,11 +29,13 @@ export type AggregateKycApplication = {
 export type KycApplicationAvgAggregateOutputType = {
   currentStep: number | null
   panMatchScore: number | null
+  creditScore: number | null
 }
 
 export type KycApplicationSumAggregateOutputType = {
   currentStep: number | null
   panMatchScore: number | null
+  creditScore: number | null
 }
 
 export type KycApplicationMinAggregateOutputType = {
@@ -53,6 +55,12 @@ export type KycApplicationMinAggregateOutputType = {
   panType: string | null
   panMatchScore: number | null
   panStatus: string | null
+  panError: string | null
+  creditScore: number | null
+  creditScoreBureau: string | null
+  creditScoreDate: Date | null
+  creditScoreCategory: string | null
+  decentroTxnId: string | null
   rejectionReason: string | null
   submittedAt: Date | null
   createdAt: Date | null
@@ -76,6 +84,12 @@ export type KycApplicationMaxAggregateOutputType = {
   panType: string | null
   panMatchScore: number | null
   panStatus: string | null
+  panError: string | null
+  creditScore: number | null
+  creditScoreBureau: string | null
+  creditScoreDate: Date | null
+  creditScoreCategory: string | null
+  decentroTxnId: string | null
   rejectionReason: string | null
   submittedAt: Date | null
   createdAt: Date | null
@@ -99,6 +113,12 @@ export type KycApplicationCountAggregateOutputType = {
   panType: number
   panMatchScore: number
   panStatus: number
+  panError: number
+  creditScore: number
+  creditScoreBureau: number
+  creditScoreDate: number
+  creditScoreCategory: number
+  decentroTxnId: number
   rejectionReason: number
   submittedAt: number
   createdAt: number
@@ -110,11 +130,13 @@ export type KycApplicationCountAggregateOutputType = {
 export type KycApplicationAvgAggregateInputType = {
   currentStep?: true
   panMatchScore?: true
+  creditScore?: true
 }
 
 export type KycApplicationSumAggregateInputType = {
   currentStep?: true
   panMatchScore?: true
+  creditScore?: true
 }
 
 export type KycApplicationMinAggregateInputType = {
@@ -134,6 +156,12 @@ export type KycApplicationMinAggregateInputType = {
   panType?: true
   panMatchScore?: true
   panStatus?: true
+  panError?: true
+  creditScore?: true
+  creditScoreBureau?: true
+  creditScoreDate?: true
+  creditScoreCategory?: true
+  decentroTxnId?: true
   rejectionReason?: true
   submittedAt?: true
   createdAt?: true
@@ -157,6 +185,12 @@ export type KycApplicationMaxAggregateInputType = {
   panType?: true
   panMatchScore?: true
   panStatus?: true
+  panError?: true
+  creditScore?: true
+  creditScoreBureau?: true
+  creditScoreDate?: true
+  creditScoreCategory?: true
+  decentroTxnId?: true
   rejectionReason?: true
   submittedAt?: true
   createdAt?: true
@@ -180,6 +214,12 @@ export type KycApplicationCountAggregateInputType = {
   panType?: true
   panMatchScore?: true
   panStatus?: true
+  panError?: true
+  creditScore?: true
+  creditScoreBureau?: true
+  creditScoreDate?: true
+  creditScoreCategory?: true
+  decentroTxnId?: true
   rejectionReason?: true
   submittedAt?: true
   createdAt?: true
@@ -290,6 +330,12 @@ export type KycApplicationGroupByOutputType = {
   panType: string | null
   panMatchScore: number | null
   panStatus: string | null
+  panError: string | null
+  creditScore: number | null
+  creditScoreBureau: string | null
+  creditScoreDate: Date | null
+  creditScoreCategory: string | null
+  decentroTxnId: string | null
   rejectionReason: string | null
   submittedAt: Date | null
   createdAt: Date
@@ -336,6 +382,12 @@ export type KycApplicationWhereInput = {
   panType?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   panMatchScore?: Prisma.FloatNullableFilter<"KycApplication"> | number | null
   panStatus?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  panError?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  creditScore?: Prisma.IntNullableFilter<"KycApplication"> | number | null
+  creditScoreBureau?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  creditScoreDate?: Prisma.DateTimeNullableFilter<"KycApplication"> | Date | string | null
+  creditScoreCategory?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  decentroTxnId?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   rejectionReason?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   submittedAt?: Prisma.DateTimeNullableFilter<"KycApplication"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"KycApplication"> | Date | string
@@ -361,6 +413,12 @@ export type KycApplicationOrderByWithRelationInput = {
   panType?: Prisma.SortOrderInput | Prisma.SortOrder
   panMatchScore?: Prisma.SortOrderInput | Prisma.SortOrder
   panStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  panError?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreBureau?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreCategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  decentroTxnId?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -389,6 +447,12 @@ export type KycApplicationWhereUniqueInput = Prisma.AtLeast<{
   panType?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   panMatchScore?: Prisma.FloatNullableFilter<"KycApplication"> | number | null
   panStatus?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  panError?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  creditScore?: Prisma.IntNullableFilter<"KycApplication"> | number | null
+  creditScoreBureau?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  creditScoreDate?: Prisma.DateTimeNullableFilter<"KycApplication"> | Date | string | null
+  creditScoreCategory?: Prisma.StringNullableFilter<"KycApplication"> | string | null
+  decentroTxnId?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   rejectionReason?: Prisma.StringNullableFilter<"KycApplication"> | string | null
   submittedAt?: Prisma.DateTimeNullableFilter<"KycApplication"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"KycApplication"> | Date | string
@@ -414,6 +478,12 @@ export type KycApplicationOrderByWithAggregationInput = {
   panType?: Prisma.SortOrderInput | Prisma.SortOrder
   panMatchScore?: Prisma.SortOrderInput | Prisma.SortOrder
   panStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  panError?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreBureau?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  creditScoreCategory?: Prisma.SortOrderInput | Prisma.SortOrder
+  decentroTxnId?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -445,6 +515,12 @@ export type KycApplicationScalarWhereWithAggregatesInput = {
   panType?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
   panMatchScore?: Prisma.FloatNullableWithAggregatesFilter<"KycApplication"> | number | null
   panStatus?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
+  panError?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
+  creditScore?: Prisma.IntNullableWithAggregatesFilter<"KycApplication"> | number | null
+  creditScoreBureau?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
+  creditScoreDate?: Prisma.DateTimeNullableWithAggregatesFilter<"KycApplication"> | Date | string | null
+  creditScoreCategory?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
+  decentroTxnId?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
   rejectionReason?: Prisma.StringNullableWithAggregatesFilter<"KycApplication"> | string | null
   submittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"KycApplication"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"KycApplication"> | Date | string
@@ -467,6 +543,12 @@ export type KycApplicationCreateInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -492,6 +574,12 @@ export type KycApplicationUncheckedCreateInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -515,6 +603,12 @@ export type KycApplicationUpdateInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -540,6 +634,12 @@ export type KycApplicationUncheckedUpdateInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -564,6 +664,12 @@ export type KycApplicationCreateManyInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -586,6 +692,12 @@ export type KycApplicationUpdateManyMutationInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -609,6 +721,12 @@ export type KycApplicationUncheckedUpdateManyInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -637,6 +755,12 @@ export type KycApplicationCountOrderByAggregateInput = {
   panType?: Prisma.SortOrder
   panMatchScore?: Prisma.SortOrder
   panStatus?: Prisma.SortOrder
+  panError?: Prisma.SortOrder
+  creditScore?: Prisma.SortOrder
+  creditScoreBureau?: Prisma.SortOrder
+  creditScoreDate?: Prisma.SortOrder
+  creditScoreCategory?: Prisma.SortOrder
+  decentroTxnId?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -646,6 +770,7 @@ export type KycApplicationCountOrderByAggregateInput = {
 export type KycApplicationAvgOrderByAggregateInput = {
   currentStep?: Prisma.SortOrder
   panMatchScore?: Prisma.SortOrder
+  creditScore?: Prisma.SortOrder
 }
 
 export type KycApplicationMaxOrderByAggregateInput = {
@@ -665,6 +790,12 @@ export type KycApplicationMaxOrderByAggregateInput = {
   panType?: Prisma.SortOrder
   panMatchScore?: Prisma.SortOrder
   panStatus?: Prisma.SortOrder
+  panError?: Prisma.SortOrder
+  creditScore?: Prisma.SortOrder
+  creditScoreBureau?: Prisma.SortOrder
+  creditScoreDate?: Prisma.SortOrder
+  creditScoreCategory?: Prisma.SortOrder
+  decentroTxnId?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -688,6 +819,12 @@ export type KycApplicationMinOrderByAggregateInput = {
   panType?: Prisma.SortOrder
   panMatchScore?: Prisma.SortOrder
   panStatus?: Prisma.SortOrder
+  panError?: Prisma.SortOrder
+  creditScore?: Prisma.SortOrder
+  creditScoreBureau?: Prisma.SortOrder
+  creditScoreDate?: Prisma.SortOrder
+  creditScoreCategory?: Prisma.SortOrder
+  decentroTxnId?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -697,6 +834,7 @@ export type KycApplicationMinOrderByAggregateInput = {
 export type KycApplicationSumOrderByAggregateInput = {
   currentStep?: Prisma.SortOrder
   panMatchScore?: Prisma.SortOrder
+  creditScore?: Prisma.SortOrder
 }
 
 export type KycApplicationScalarRelationFilter = {
@@ -756,6 +894,14 @@ export type NullableFloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
@@ -790,6 +936,12 @@ export type KycApplicationCreateWithoutCustomerInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -813,6 +965,12 @@ export type KycApplicationUncheckedCreateWithoutCustomerInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -852,6 +1010,12 @@ export type KycApplicationUpdateWithoutCustomerInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -875,6 +1039,12 @@ export type KycApplicationUncheckedUpdateWithoutCustomerInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -898,6 +1068,12 @@ export type KycApplicationCreateWithoutDocumentsInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -922,6 +1098,12 @@ export type KycApplicationUncheckedCreateWithoutDocumentsInput = {
   panType?: string | null
   panMatchScore?: number | null
   panStatus?: string | null
+  panError?: string | null
+  creditScore?: number | null
+  creditScoreBureau?: string | null
+  creditScoreDate?: Date | string | null
+  creditScoreCategory?: string | null
+  decentroTxnId?: string | null
   rejectionReason?: string | null
   submittedAt?: Date | string | null
   createdAt?: Date | string
@@ -960,6 +1142,12 @@ export type KycApplicationUpdateWithoutDocumentsInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -984,6 +1172,12 @@ export type KycApplicationUncheckedUpdateWithoutDocumentsInput = {
   panType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panMatchScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   panStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  panError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  creditScoreBureau?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditScoreDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  creditScoreCategory?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  decentroTxnId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1038,6 +1232,12 @@ export type KycApplicationSelect<ExtArgs extends runtime.Types.Extensions.Intern
   panType?: boolean
   panMatchScore?: boolean
   panStatus?: boolean
+  panError?: boolean
+  creditScore?: boolean
+  creditScoreBureau?: boolean
+  creditScoreDate?: boolean
+  creditScoreCategory?: boolean
+  decentroTxnId?: boolean
   rejectionReason?: boolean
   submittedAt?: boolean
   createdAt?: boolean
@@ -1064,6 +1264,12 @@ export type KycApplicationSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   panType?: boolean
   panMatchScore?: boolean
   panStatus?: boolean
+  panError?: boolean
+  creditScore?: boolean
+  creditScoreBureau?: boolean
+  creditScoreDate?: boolean
+  creditScoreCategory?: boolean
+  decentroTxnId?: boolean
   rejectionReason?: boolean
   submittedAt?: boolean
   createdAt?: boolean
@@ -1088,6 +1294,12 @@ export type KycApplicationSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   panType?: boolean
   panMatchScore?: boolean
   panStatus?: boolean
+  panError?: boolean
+  creditScore?: boolean
+  creditScoreBureau?: boolean
+  creditScoreDate?: boolean
+  creditScoreCategory?: boolean
+  decentroTxnId?: boolean
   rejectionReason?: boolean
   submittedAt?: boolean
   createdAt?: boolean
@@ -1112,13 +1324,19 @@ export type KycApplicationSelectScalar = {
   panType?: boolean
   panMatchScore?: boolean
   panStatus?: boolean
+  panError?: boolean
+  creditScore?: boolean
+  creditScoreBureau?: boolean
+  creditScoreDate?: boolean
+  creditScoreCategory?: boolean
+  decentroTxnId?: boolean
   rejectionReason?: boolean
   submittedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type KycApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerId" | "status" | "currentStep" | "aadhaarNumber" | "aadhaarName" | "aadhaarDob" | "aadhaarGender" | "aadhaarAddress" | "aadhaarPhoto" | "panNumber" | "panName" | "panDob" | "panType" | "panMatchScore" | "panStatus" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["kycApplication"]>
+export type KycApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "customerId" | "status" | "currentStep" | "aadhaarNumber" | "aadhaarName" | "aadhaarDob" | "aadhaarGender" | "aadhaarAddress" | "aadhaarPhoto" | "panNumber" | "panName" | "panDob" | "panType" | "panMatchScore" | "panStatus" | "panError" | "creditScore" | "creditScoreBureau" | "creditScoreDate" | "creditScoreCategory" | "decentroTxnId" | "rejectionReason" | "submittedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["kycApplication"]>
 export type KycApplicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
   documents?: boolean | Prisma.KycApplication$documentsArgs<ExtArgs>
@@ -1154,6 +1372,12 @@ export type $KycApplicationPayload<ExtArgs extends runtime.Types.Extensions.Inte
     panType: string | null
     panMatchScore: number | null
     panStatus: string | null
+    panError: string | null
+    creditScore: number | null
+    creditScoreBureau: string | null
+    creditScoreDate: Date | null
+    creditScoreCategory: string | null
+    decentroTxnId: string | null
     rejectionReason: string | null
     submittedAt: Date | null
     createdAt: Date
@@ -1599,6 +1823,12 @@ export interface KycApplicationFieldRefs {
   readonly panType: Prisma.FieldRef<"KycApplication", 'String'>
   readonly panMatchScore: Prisma.FieldRef<"KycApplication", 'Float'>
   readonly panStatus: Prisma.FieldRef<"KycApplication", 'String'>
+  readonly panError: Prisma.FieldRef<"KycApplication", 'String'>
+  readonly creditScore: Prisma.FieldRef<"KycApplication", 'Int'>
+  readonly creditScoreBureau: Prisma.FieldRef<"KycApplication", 'String'>
+  readonly creditScoreDate: Prisma.FieldRef<"KycApplication", 'DateTime'>
+  readonly creditScoreCategory: Prisma.FieldRef<"KycApplication", 'String'>
+  readonly decentroTxnId: Prisma.FieldRef<"KycApplication", 'String'>
   readonly rejectionReason: Prisma.FieldRef<"KycApplication", 'String'>
   readonly submittedAt: Prisma.FieldRef<"KycApplication", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"KycApplication", 'DateTime'>

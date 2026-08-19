@@ -6,7 +6,7 @@ export const CUSTOMER_TOKEN_EXPIRY = "24h";
 export const ADMIN_TOKEN_EXPIRY = "8h";
 
 // KYC Flow
-export const TOTAL_STEPS = 7;
+export const TOTAL_STEPS = 8;
 export const OTP_LENGTH = 6;
 export const OTP_TIMER_SECONDS = 30;
 export const AADHAAR_LENGTH = 12;
@@ -20,10 +20,15 @@ export const API = {
   VERIFY_OTP: "/api/auth/verify-otp",
   AADHAAR_OTP_SEND: "/api/kyc/aadhaar/otp-send",
   AADHAAR_OTP_VERIFY: "/api/kyc/aadhaar/otp-verify",
-  PAN_VERIFY: "/api/kyc/pan/verify",
   SAVE_STEP: "/api/kyc/save-step",
   UPLOAD: "/api/kyc/upload",
+  CREDIT_SCORE: "/api/kyc/credit-score",
 } as const;
+
+// Credit Score Thresholds
+export const CREDIT_SCORE_EXCELLENT = 750;
+export const CREDIT_SCORE_GOOD = 700;
+export const CREDIT_SCORE_FAIR = 650;
 
 // Match thresholds
 export const NAME_MATCH_GOOD_THRESHOLD = 60;

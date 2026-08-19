@@ -19,6 +19,10 @@ interface Application {
   panName: string | null;
   panMatchScore: number | null;
   panStatus: string | null;
+  creditScore: number | null;
+  creditScoreBureau: string | null;
+  creditScoreCategory: string | null;
+  creditScoreDate: string | null;
   rejectionReason: string | null;
   submittedAt: string | null;
   createdAt: string;
@@ -175,6 +179,61 @@ function ApplicationModal({
               </div>
             )}
           </div>
+
+          {/* Credit Score */}
+          {app.creditScore !== null && (
+            <div className="card">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-green-600 text-[20px]" style={{fontVariationSettings:"'FILL' 1"}}>analytics</span>
+                <h4 className="font-semibold text-sm text-on-surface">Credit Score</h4>
+                <span className="ml-auto text-[11px] text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full border border-green-100">{app.creditScoreBureau || "Equifax"}</span>
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl font-bold text-on-surface">{app.creditScore}</div>
+                  <div>
+                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      app.creditScoreCategory === "EXCELLENT" ? "bg-green-100 text-green-700" :
+                      app.creditScoreCategory === "GOOD" ? "bg-blue-100 text-blue-700" :
+                      app.creditScoreCategory === "FAIR" ? "bg-amber-100 text-amber-700" :
+                      "bg-red-100 text-red-700"
+                    }`}>
+                      {app.creditScoreCategory || "N/A"}
+                    </div>
+                    {app.creditScoreDate && (
+                      <p className="text-[10px] text-on-surface-variant mt-1">
+                        {new Date(app.creditScoreDate).toLocaleDateString("en-IN")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-on-surface-variant uppercase font-semibold">Enquiry Type</div>
+                  <div className="text-xs font-medium text-green-600">Soft Pull</div>
+                </div>
+              </div>
+              <div className="h-2 bg-surface-container rounded-full overflow-hidden">
+                <div
+                  className={`h-2 rounded-full ${
+                    (app.creditScore || 0) >= 750 ? "bg-green-500" :
+                    (app.creditScore || 0) >= 700 ? "bg-blue-500" :
+                    (app.creditScore || 0) >= 650 ? "bg-amber-500" : "bg-red-500"
+                  }`}
+                  style={{ width: `${Math.max(0, Math.min(100, ((app.creditScore || 0) - 300) / 6))}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {app.creditScore === null && (
+            <div className="card">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-on-surface-variant text-[20px]" style={{fontVariationSettings:"'FILL' 1"}}>analytics</span>
+                <h4 className="font-semibold text-sm text-on-surface">Credit Score</h4>
+              </div>
+              <p className="text-xs text-on-surface-variant">Not yet fetched</p>
+            </div>
+          )}
 
           {/* Documents */}
           {app.documents && app.documents.length > 0 && (

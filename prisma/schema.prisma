@@ -57,6 +57,16 @@ model KycApplication {
   panType         String?
   panMatchScore   Float?
   panStatus       String?
+  panError        String?
+
+  // Credit Score data (Equifax via Decentro)
+  creditScore         Int?
+  creditScoreBureau   String?    // "Equifax"
+  creditScoreDate     DateTime?
+  creditScoreCategory String?    // "EXCELLENT" | "GOOD" | "FAIR" | "POOR"
+
+  // DigiLocker UIStream session correlation
+  decentroTxnId  String?
 
   rejectionReason String?
   submittedAt     DateTime?
