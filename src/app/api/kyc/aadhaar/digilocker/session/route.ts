@@ -20,10 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
-    const aadhaarNumber = body.aadhaarNumber || "";
-
-    const session = await provider.initiateSession(aadhaarNumber);
+    const session = await provider.initiateSession();
 
     const ipAddress = getClientIp(req);
     const userAgent = getUserAgent(req);

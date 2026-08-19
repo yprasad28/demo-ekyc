@@ -10,7 +10,7 @@ function generateRefId(): string {
 }
 
 export class DecentroDigiLockerProvider implements DigiLockerProvider {
-  async initiateSession(_aadhaarNumber?: string): Promise<DigiLockerSessionResult> {
+  async initiateSession(): Promise<DigiLockerSessionResult> {
     const result = await decentroRequest(
       "/v2/kyc/sso/digilocker/session",
       {
