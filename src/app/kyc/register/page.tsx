@@ -1142,14 +1142,10 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
 
 // ─── Step 7: CIBIL Score ──────────────────────────────────────────────────────
 function StepCibilScore({
-  aadhaarData,
-  panData,
   token,
   onNext,
   onBack,
 }: {
-  aadhaarData: AadhaarData;
-  panData: PanData;
   token: string;
   onNext: () => void;
   onBack: () => void;
@@ -1496,7 +1492,7 @@ function StepTestBypass({
         <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
           <p className="text-xs text-blue-700 font-medium">
             The API will match this name + mobile with Equifax bureau records.
-            If no match is found, you&apos;ll see "No credit history".
+            If no match is found, you&apos;ll see &quot;No credit history&quot;.
           </p>
         </div>
       </div>
@@ -1749,7 +1745,7 @@ export default function RegisterPage() {
       if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
       return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
     }
-    if (step === 7) return <StepCibilScore aadhaarData={aadhaarData!} panData={panData!} token={token} onBack={() => setStep(testMode ? "test-bypass" : 6)} onNext={() => setStep(8)} />;
+    if (step === 7) return <StepCibilScore token={token} onBack={() => setStep(testMode ? "test-bypass" : 6)} onNext={() => setStep(8)} />;
     if (step === 8) return <StepDocuments token={token} onBack={() => setStep(7)} onNext={() => setStep("complete")} />;
     return <StepComplete />;
   };
