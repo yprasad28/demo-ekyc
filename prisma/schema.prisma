@@ -31,6 +31,8 @@ model Customer {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   kycApplication KycApplication?
+  wallet         Wallet?
+  paymentOrders  PaymentOrder[]
 
   @@map("customers")
 }
@@ -110,4 +112,68 @@ model AuditLog {
   timestamp DateTime @default(now())
 
   @@map("audit_logs")
+}
+
+// ─── Wallet & Payment Models ──────────────────────────────────────────────────
+
+model Wallet {
+  id             String              @id @default(uuid())
+  customerId     String              @unique
+  customer       Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  balance        Int                 @default(0)  // Balance in paise (₹500 = 50000)
+  freePan        Int                 @default(5)  // Free PAN verification credits
+  freeCreditScore Int                @default(5)  // Free credit score credits
+  freeAadhaar    Int                 @default(5)  // Free Aadhaar verification credits
+  transactions   WalletTransaction[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id              String   @id @default(uuid())
+  walletId        String
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type            String   // TOPUP | TOPUP_REFUND | KYC_DEDUCTION | KYC_REFUND | FREE_CREDIT_USE | FREE_CREDIT_RESTORE | ADMIN_ADJUSTMENT
+  amount          Int      // Amount in paise (positive = credit, negative = debit)
+  balanceAfter    Int      // Balance after this transaction
+  referenceId     String?  // payment orderId, KYC applicationId, etc.
+  description     String?  // Human-readable description
+  metadata        String?  // JSON string for extra data
+  createdAt       DateTime @default(now())
+
+  @@map("wallet_transactions")
+}
+
+model PaymentOrder {
+  id                   String   @id @default(uuid())
+  customerId           String
+  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  razorpayOrderId      String   @unique  // Razorpay order ID (e.g. order_xxx)
+  razorpayPaymentId    String?  @unique  // Razorpay payment ID (e.g. pay_xxx) — set after payment
+  amount               Int      // Amount in paise (₹500 = 50000)
+  currency             String   @default("INR")
+  status               String   @default("CREATED") // State machine: CREATED → PAYMENT_RECEIVED → VERIFIED → CAPTURED → CREDITED
+  idempotencyKey       String   @unique  // Client-generated UUID for duplicate protection
+  receipt              String?  // Razorpay receipt field
+  walletCredited       Boolean  @default(false)  // Prevent double-credit
+  failureReason        String?  // If payment failed
+  metadata             String?  // JSON string for extra data
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("payment_orders")
+}
+
+model WebhookEvent {
+  id           String   @id @default(uuid())
+  eventId      String   @unique  // Razorpay event ID (e.g. evt_xxx) — for deduplication
+  eventType    String   // e.g. "payment.captured", "payment.failed"
+  payload      String   // Raw event payload (JSON string)
+  processed    Boolean  @default(false)
+  error        String?  // Error if processing failed
+  createdAt    DateTime @default(now())
+
+  @@map("webhook_events")
 }

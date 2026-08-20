@@ -199,6 +199,8 @@ export type CustomerWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Customer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Customer"> | Date | string
   kycApplication?: Prisma.XOR<Prisma.KycApplicationNullableScalarRelationFilter, Prisma.KycApplicationWhereInput> | null
+  wallet?: Prisma.XOR<Prisma.WalletNullableScalarRelationFilter, Prisma.WalletWhereInput> | null
+  paymentOrders?: Prisma.PaymentOrderListRelationFilter
 }
 
 export type CustomerOrderByWithRelationInput = {
@@ -210,6 +212,8 @@ export type CustomerOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   kycApplication?: Prisma.KycApplicationOrderByWithRelationInput
+  wallet?: Prisma.WalletOrderByWithRelationInput
+  paymentOrders?: Prisma.PaymentOrderOrderByRelationAggregateInput
 }
 
 export type CustomerWhereUniqueInput = Prisma.AtLeast<{
@@ -224,6 +228,8 @@ export type CustomerWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Customer"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Customer"> | Date | string
   kycApplication?: Prisma.XOR<Prisma.KycApplicationNullableScalarRelationFilter, Prisma.KycApplicationWhereInput> | null
+  wallet?: Prisma.XOR<Prisma.WalletNullableScalarRelationFilter, Prisma.WalletWhereInput> | null
+  paymentOrders?: Prisma.PaymentOrderListRelationFilter
 }, "id" | "mobile" | "mobileHash">
 
 export type CustomerOrderByWithAggregationInput = {
@@ -261,6 +267,8 @@ export type CustomerCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   kycApplication?: Prisma.KycApplicationCreateNestedOneWithoutCustomerInput
+  wallet?: Prisma.WalletCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderCreateNestedManyWithoutCustomerInput
 }
 
 export type CustomerUncheckedCreateInput = {
@@ -272,6 +280,8 @@ export type CustomerUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   kycApplication?: Prisma.KycApplicationUncheckedCreateNestedOneWithoutCustomerInput
+  wallet?: Prisma.WalletUncheckedCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type CustomerUpdateInput = {
@@ -283,6 +293,8 @@ export type CustomerUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   kycApplication?: Prisma.KycApplicationUpdateOneWithoutCustomerNestedInput
+  wallet?: Prisma.WalletUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUpdateManyWithoutCustomerNestedInput
 }
 
 export type CustomerUncheckedUpdateInput = {
@@ -294,6 +306,8 @@ export type CustomerUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   kycApplication?: Prisma.KycApplicationUncheckedUpdateOneWithoutCustomerNestedInput
+  wallet?: Prisma.WalletUncheckedUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedUpdateManyWithoutCustomerNestedInput
 }
 
 export type CustomerCreateManyInput = {
@@ -387,6 +401,34 @@ export type CustomerUpdateOneRequiredWithoutKycApplicationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CustomerUpdateToOneWithWhereWithoutKycApplicationInput, Prisma.CustomerUpdateWithoutKycApplicationInput>, Prisma.CustomerUncheckedUpdateWithoutKycApplicationInput>
 }
 
+export type CustomerCreateNestedOneWithoutWalletInput = {
+  create?: Prisma.XOR<Prisma.CustomerCreateWithoutWalletInput, Prisma.CustomerUncheckedCreateWithoutWalletInput>
+  connectOrCreate?: Prisma.CustomerCreateOrConnectWithoutWalletInput
+  connect?: Prisma.CustomerWhereUniqueInput
+}
+
+export type CustomerUpdateOneRequiredWithoutWalletNestedInput = {
+  create?: Prisma.XOR<Prisma.CustomerCreateWithoutWalletInput, Prisma.CustomerUncheckedCreateWithoutWalletInput>
+  connectOrCreate?: Prisma.CustomerCreateOrConnectWithoutWalletInput
+  upsert?: Prisma.CustomerUpsertWithoutWalletInput
+  connect?: Prisma.CustomerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CustomerUpdateToOneWithWhereWithoutWalletInput, Prisma.CustomerUpdateWithoutWalletInput>, Prisma.CustomerUncheckedUpdateWithoutWalletInput>
+}
+
+export type CustomerCreateNestedOneWithoutPaymentOrdersInput = {
+  create?: Prisma.XOR<Prisma.CustomerCreateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedCreateWithoutPaymentOrdersInput>
+  connectOrCreate?: Prisma.CustomerCreateOrConnectWithoutPaymentOrdersInput
+  connect?: Prisma.CustomerWhereUniqueInput
+}
+
+export type CustomerUpdateOneRequiredWithoutPaymentOrdersNestedInput = {
+  create?: Prisma.XOR<Prisma.CustomerCreateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedCreateWithoutPaymentOrdersInput>
+  connectOrCreate?: Prisma.CustomerCreateOrConnectWithoutPaymentOrdersInput
+  upsert?: Prisma.CustomerUpsertWithoutPaymentOrdersInput
+  connect?: Prisma.CustomerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CustomerUpdateToOneWithWhereWithoutPaymentOrdersInput, Prisma.CustomerUpdateWithoutPaymentOrdersInput>, Prisma.CustomerUncheckedUpdateWithoutPaymentOrdersInput>
+}
+
 export type CustomerCreateWithoutKycApplicationInput = {
   id?: string
   mobile: string
@@ -395,6 +437,8 @@ export type CustomerCreateWithoutKycApplicationInput = {
   role?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  wallet?: Prisma.WalletCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderCreateNestedManyWithoutCustomerInput
 }
 
 export type CustomerUncheckedCreateWithoutKycApplicationInput = {
@@ -405,6 +449,8 @@ export type CustomerUncheckedCreateWithoutKycApplicationInput = {
   role?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  wallet?: Prisma.WalletUncheckedCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type CustomerCreateOrConnectWithoutKycApplicationInput = {
@@ -431,6 +477,8 @@ export type CustomerUpdateWithoutKycApplicationInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  wallet?: Prisma.WalletUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUpdateManyWithoutCustomerNestedInput
 }
 
 export type CustomerUncheckedUpdateWithoutKycApplicationInput = {
@@ -441,8 +489,167 @@ export type CustomerUncheckedUpdateWithoutKycApplicationInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  wallet?: Prisma.WalletUncheckedUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedUpdateManyWithoutCustomerNestedInput
 }
 
+export type CustomerCreateWithoutWalletInput = {
+  id?: string
+  mobile: string
+  mobileHash: string
+  email?: string | null
+  role?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  kycApplication?: Prisma.KycApplicationCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderCreateNestedManyWithoutCustomerInput
+}
+
+export type CustomerUncheckedCreateWithoutWalletInput = {
+  id?: string
+  mobile: string
+  mobileHash: string
+  email?: string | null
+  role?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  kycApplication?: Prisma.KycApplicationUncheckedCreateNestedOneWithoutCustomerInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedCreateNestedManyWithoutCustomerInput
+}
+
+export type CustomerCreateOrConnectWithoutWalletInput = {
+  where: Prisma.CustomerWhereUniqueInput
+  create: Prisma.XOR<Prisma.CustomerCreateWithoutWalletInput, Prisma.CustomerUncheckedCreateWithoutWalletInput>
+}
+
+export type CustomerUpsertWithoutWalletInput = {
+  update: Prisma.XOR<Prisma.CustomerUpdateWithoutWalletInput, Prisma.CustomerUncheckedUpdateWithoutWalletInput>
+  create: Prisma.XOR<Prisma.CustomerCreateWithoutWalletInput, Prisma.CustomerUncheckedCreateWithoutWalletInput>
+  where?: Prisma.CustomerWhereInput
+}
+
+export type CustomerUpdateToOneWithWhereWithoutWalletInput = {
+  where?: Prisma.CustomerWhereInput
+  data: Prisma.XOR<Prisma.CustomerUpdateWithoutWalletInput, Prisma.CustomerUncheckedUpdateWithoutWalletInput>
+}
+
+export type CustomerUpdateWithoutWalletInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  mobile?: Prisma.StringFieldUpdateOperationsInput | string
+  mobileHash?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  kycApplication?: Prisma.KycApplicationUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUpdateManyWithoutCustomerNestedInput
+}
+
+export type CustomerUncheckedUpdateWithoutWalletInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  mobile?: Prisma.StringFieldUpdateOperationsInput | string
+  mobileHash?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  kycApplication?: Prisma.KycApplicationUncheckedUpdateOneWithoutCustomerNestedInput
+  paymentOrders?: Prisma.PaymentOrderUncheckedUpdateManyWithoutCustomerNestedInput
+}
+
+export type CustomerCreateWithoutPaymentOrdersInput = {
+  id?: string
+  mobile: string
+  mobileHash: string
+  email?: string | null
+  role?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  kycApplication?: Prisma.KycApplicationCreateNestedOneWithoutCustomerInput
+  wallet?: Prisma.WalletCreateNestedOneWithoutCustomerInput
+}
+
+export type CustomerUncheckedCreateWithoutPaymentOrdersInput = {
+  id?: string
+  mobile: string
+  mobileHash: string
+  email?: string | null
+  role?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  kycApplication?: Prisma.KycApplicationUncheckedCreateNestedOneWithoutCustomerInput
+  wallet?: Prisma.WalletUncheckedCreateNestedOneWithoutCustomerInput
+}
+
+export type CustomerCreateOrConnectWithoutPaymentOrdersInput = {
+  where: Prisma.CustomerWhereUniqueInput
+  create: Prisma.XOR<Prisma.CustomerCreateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedCreateWithoutPaymentOrdersInput>
+}
+
+export type CustomerUpsertWithoutPaymentOrdersInput = {
+  update: Prisma.XOR<Prisma.CustomerUpdateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedUpdateWithoutPaymentOrdersInput>
+  create: Prisma.XOR<Prisma.CustomerCreateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedCreateWithoutPaymentOrdersInput>
+  where?: Prisma.CustomerWhereInput
+}
+
+export type CustomerUpdateToOneWithWhereWithoutPaymentOrdersInput = {
+  where?: Prisma.CustomerWhereInput
+  data: Prisma.XOR<Prisma.CustomerUpdateWithoutPaymentOrdersInput, Prisma.CustomerUncheckedUpdateWithoutPaymentOrdersInput>
+}
+
+export type CustomerUpdateWithoutPaymentOrdersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  mobile?: Prisma.StringFieldUpdateOperationsInput | string
+  mobileHash?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  kycApplication?: Prisma.KycApplicationUpdateOneWithoutCustomerNestedInput
+  wallet?: Prisma.WalletUpdateOneWithoutCustomerNestedInput
+}
+
+export type CustomerUncheckedUpdateWithoutPaymentOrdersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  mobile?: Prisma.StringFieldUpdateOperationsInput | string
+  mobileHash?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  kycApplication?: Prisma.KycApplicationUncheckedUpdateOneWithoutCustomerNestedInput
+  wallet?: Prisma.WalletUncheckedUpdateOneWithoutCustomerNestedInput
+}
+
+
+/**
+ * Count Type CustomerCountOutputType
+ */
+
+export type CustomerCountOutputType = {
+  paymentOrders: number
+}
+
+export type CustomerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  paymentOrders?: boolean | CustomerCountOutputTypeCountPaymentOrdersArgs
+}
+
+/**
+ * CustomerCountOutputType without action
+ */
+export type CustomerCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CustomerCountOutputType
+   */
+  select?: Prisma.CustomerCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * CustomerCountOutputType without action
+ */
+export type CustomerCountOutputTypeCountPaymentOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PaymentOrderWhereInput
+}
 
 
 export type CustomerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -454,6 +661,9 @@ export type CustomerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdAt?: boolean
   updatedAt?: boolean
   kycApplication?: boolean | Prisma.Customer$kycApplicationArgs<ExtArgs>
+  wallet?: boolean | Prisma.Customer$walletArgs<ExtArgs>
+  paymentOrders?: boolean | Prisma.Customer$paymentOrdersArgs<ExtArgs>
+  _count?: boolean | Prisma.CustomerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["customer"]>
 
 export type CustomerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -489,6 +699,9 @@ export type CustomerSelectScalar = {
 export type CustomerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "mobile" | "mobileHash" | "email" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["customer"]>
 export type CustomerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   kycApplication?: boolean | Prisma.Customer$kycApplicationArgs<ExtArgs>
+  wallet?: boolean | Prisma.Customer$walletArgs<ExtArgs>
+  paymentOrders?: boolean | Prisma.Customer$paymentOrdersArgs<ExtArgs>
+  _count?: boolean | Prisma.CustomerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CustomerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 export type CustomerIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -497,6 +710,8 @@ export type $CustomerPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Customer"
   objects: {
     kycApplication: Prisma.$KycApplicationPayload<ExtArgs> | null
+    wallet: Prisma.$WalletPayload<ExtArgs> | null
+    paymentOrders: Prisma.$PaymentOrderPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -901,6 +1116,8 @@ readonly fields: CustomerFieldRefs;
 export interface Prisma__CustomerClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   kycApplication<T extends Prisma.Customer$kycApplicationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Customer$kycApplicationArgs<ExtArgs>>): Prisma.Prisma__KycApplicationClient<runtime.Types.Result.GetResult<Prisma.$KycApplicationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  wallet<T extends Prisma.Customer$walletArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Customer$walletArgs<ExtArgs>>): Prisma.Prisma__WalletClient<runtime.Types.Result.GetResult<Prisma.$WalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  paymentOrders<T extends Prisma.Customer$paymentOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Customer$paymentOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PaymentOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1346,6 +1563,49 @@ export type Customer$kycApplicationArgs<ExtArgs extends runtime.Types.Extensions
    */
   include?: Prisma.KycApplicationInclude<ExtArgs> | null
   where?: Prisma.KycApplicationWhereInput
+}
+
+/**
+ * Customer.wallet
+ */
+export type Customer$walletArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Wallet
+   */
+  select?: Prisma.WalletSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Wallet
+   */
+  omit?: Prisma.WalletOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WalletInclude<ExtArgs> | null
+  where?: Prisma.WalletWhereInput
+}
+
+/**
+ * Customer.paymentOrders
+ */
+export type Customer$paymentOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PaymentOrder
+   */
+  select?: Prisma.PaymentOrderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PaymentOrder
+   */
+  omit?: Prisma.PaymentOrderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PaymentOrderInclude<ExtArgs> | null
+  where?: Prisma.PaymentOrderWhereInput
+  orderBy?: Prisma.PaymentOrderOrderByWithRelationInput | Prisma.PaymentOrderOrderByWithRelationInput[]
+  cursor?: Prisma.PaymentOrderWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PaymentOrderScalarFieldEnum | Prisma.PaymentOrderScalarFieldEnum[]
 }
 
 /**

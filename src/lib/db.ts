@@ -293,5 +293,245 @@ export const db = {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.listAuditLogs();
     }
-  }
+  },
+
+  // ─── Wallet Methods ───────────────────────────────────────────────────────
+  findOrCreateWallet: async (customerId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findOrCreateWallet(customerId);
+    try {
+      const existing = await prisma.wallet.findUnique({ where: { customerId } });
+      if (existing) return existing;
+      return await prisma.wallet.create({ data: { customerId } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findOrCreateWallet(customerId);
+    }
+  },
+
+  getWalletBalance: async (customerId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.getWalletBalance(customerId);
+    try {
+      return await prisma.wallet.findUnique({ where: { customerId } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.getWalletBalance(customerId);
+    }
+  },
+
+  // Atomic deduction: UPDATE wallet SET balance = balance - X WHERE balance >= X
+  deductWalletBalance: async (walletId: string, amount: number) => {
+    await ensureInit();
+    if (useFallback) return mockDb.deductWalletBalance(walletId, amount);
+    try {
+      // Atomic conditional update — prevents overspend
+      const [updated] = await prisma.$queryRaw`
+        UPDATE wallets
+        SET balance = balance - ${amount}, "updatedAt" = NOW()
+        WHERE id = ${walletId} AND balance >= ${amount}
+        RETURNING *
+      `;
+      return updated || null;
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.deductWalletBalance(walletId, amount);
+    }
+  },
+
+  creditWalletBalance: async (walletId: string, amount: number) => {
+    await ensureInit();
+    if (useFallback) return mockDb.creditWalletBalance(walletId, amount);
+    try {
+      return await prisma.wallet.update({
+        where: { id: walletId },
+        data: { balance: { increment: amount } },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.creditWalletBalance(walletId, amount);
+    }
+  },
+
+  useFreeCredit: async (customerId: string, type: 'PAN' | 'CREDIT_SCORE' | 'AADHAAR') => {
+    await ensureInit();
+    if (useFallback) return mockDb.useFreeCredit(customerId, type);
+    try {
+      const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
+      const [updated] = await prisma.$queryRaw`
+        UPDATE wallets
+        SET ${field} = ${field} - 1, "updatedAt" = NOW()
+        WHERE "customerId" = ${customerId} AND ${field} > 0
+        RETURNING *
+      `;
+      return !!updated;
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.useFreeCredit(customerId, type);
+    }
+  },
+
+  restoreFreeCredit: async (customerId: string, type: 'PAN' | 'CREDIT_SCORE' | 'AADHAAR') => {
+    await ensureInit();
+    if (useFallback) return mockDb.restoreFreeCredit(customerId, type);
+    try {
+      const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
+      await prisma.$queryRaw`
+        UPDATE wallets
+        SET ${field} = ${field} + 1, "updatedAt" = NOW()
+        WHERE "customerId" = ${customerId}
+      `;
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.restoreFreeCredit(customerId, type);
+    }
+  },
+
+  createWalletTransaction: async (
+    walletId: string,
+    type: string,
+    amount: number,
+    balanceAfter: number,
+    referenceId: string | null,
+    description: string | null,
+    metadata: string | null
+  ) => {
+    await ensureInit();
+    if (useFallback) return mockDb.createWalletTransaction(walletId, type, amount, balanceAfter, referenceId, description, metadata);
+    try {
+      return await prisma.walletTransaction.create({
+        data: { walletId, type, amount, balanceAfter, referenceId, description, metadata },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.createWalletTransaction(walletId, type, amount, balanceAfter, referenceId, description, metadata);
+    }
+  },
+
+  getWalletTransactions: async (walletId: string, limit = 20, offset = 0) => {
+    await ensureInit();
+    if (useFallback) return mockDb.getWalletTransactions(walletId, limit, offset);
+    try {
+      return await prisma.walletTransaction.findMany({
+        where: { walletId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.getWalletTransactions(walletId, limit, offset);
+    }
+  },
+
+  // ─── Payment Order Methods ────────────────────────────────────────────────
+  createPaymentOrder: async (customerId: string, razorpayOrderId: string, amount: number, idempotencyKey: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.createPaymentOrder(customerId, razorpayOrderId, amount, idempotencyKey);
+    try {
+      return await prisma.paymentOrder.create({
+        data: { customerId, razorpayOrderId, amount, idempotencyKey },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.createPaymentOrder(customerId, razorpayOrderId, amount, idempotencyKey);
+    }
+  },
+
+  findPaymentOrderById: async (razorpayOrderId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findPaymentOrderById(razorpayOrderId);
+    try {
+      return await prisma.paymentOrder.findUnique({ where: { razorpayOrderId } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findPaymentOrderById(razorpayOrderId);
+    }
+  },
+
+  findPaymentOrderByIdempotencyKey: async (key: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findPaymentOrderByIdempotencyKey(key);
+    try {
+      return await prisma.paymentOrder.findUnique({ where: { idempotencyKey: key } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findPaymentOrderByIdempotencyKey(key);
+    }
+  },
+
+  findPaymentOrderByPaymentId: async (paymentId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findPaymentOrderByPaymentId(paymentId);
+    try {
+      return await prisma.paymentOrder.findUnique({ where: { razorpayPaymentId: paymentId } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findPaymentOrderByPaymentId(paymentId);
+    }
+  },
+
+  updatePaymentOrder: async (orderId: string, updates: Record<string, unknown>) => {
+    await ensureInit();
+    if (useFallback) return mockDb.updatePaymentOrder(orderId, updates);
+    try {
+      return await prisma.paymentOrder.update({ where: { id: orderId }, data: updates });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.updatePaymentOrder(orderId, updates);
+    }
+  },
+
+  markWalletCredited: async (orderId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.markWalletCredited(orderId);
+    try {
+      return await prisma.paymentOrder.update({
+        where: { id: orderId },
+        data: { walletCredited: true, status: 'CREDITED' },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.markWalletCredited(orderId);
+    }
+  },
+
+  // ─── Webhook Event Methods ────────────────────────────────────────────────
+  findWebhookEventByEventId: async (eventId: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.findWebhookEventByEventId(eventId);
+    try {
+      return await prisma.webhookEvent.findUnique({ where: { eventId } });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.findWebhookEventByEventId(eventId);
+    }
+  },
+
+  createWebhookEvent: async (eventId: string, eventType: string, payload: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.createWebhookEvent(eventId, eventType, payload);
+    try {
+      return await prisma.webhookEvent.create({
+        data: { eventId, eventType, payload },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.createWebhookEvent(eventId, eventType, payload);
+    }
+  },
+
+  markWebhookEventProcessed: async (eventId: string, error?: string) => {
+    await ensureInit();
+    if (useFallback) return mockDb.markWebhookEventProcessed(eventId, error);
+    try {
+      await prisma.webhookEvent.update({
+        where: { eventId },
+        data: { processed: !error, error: error || null },
+      });
+    } catch (e) {
+      console.error("Prisma error, falling back to mockDb:", e);
+      return mockDb.markWebhookEventProcessed(eventId, error);
+    }
+  },
 };

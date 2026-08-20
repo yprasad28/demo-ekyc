@@ -76,12 +76,66 @@ export interface AuditLogMock {
   timestamp: string;
 }
 
+export interface WalletMock {
+  id: string;
+  customerId: string;
+  balance: number;         // In paise
+  freePan: number;
+  freeCreditScore: number;
+  freeAadhaar: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletTransactionMock {
+  id: string;
+  walletId: string;
+  type: string;
+  amount: number;          // Positive = credit, negative = debit
+  balanceAfter: number;
+  referenceId: string | null;
+  description: string | null;
+  metadata: string | null;
+  createdAt: string;
+}
+
+export interface PaymentOrderMock {
+  id: string;
+  customerId: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  idempotencyKey: string;
+  receipt: string | null;
+  walletCredited: boolean;
+  failureReason: string | null;
+  metadata: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebhookEventMock {
+  id: string;
+  eventId: string;
+  eventType: string;
+  payload: string;
+  processed: boolean;
+  error: string | null;
+  createdAt: string;
+}
+
 interface MockSchema {
   customers: CustomerMock[];
   kyc_applications: KycApplicationMock[];
   documents: DocumentMock[];
   consent_logs: ConsentLogMock[];
   audit_logs: AuditLogMock[];
+  wallets: WalletMock[];
+  wallet_transactions: WalletTransactionMock[];
+  payment_orders: PaymentOrderMock[];
+  webhook_events: WebhookEventMock[];
 }
 
 function createEmptyDb(): MockSchema {
@@ -90,7 +144,11 @@ function createEmptyDb(): MockSchema {
     kyc_applications: [],
     documents: [],
     consent_logs: [],
-    audit_logs: []
+    audit_logs: [],
+    wallets: [],
+    wallet_transactions: [],
+    payment_orders: [],
+    webhook_events: [],
   };
 }
 
@@ -352,5 +410,230 @@ export const mockDb = {
   listAuditLogs: (): AuditLogMock[] => {
     const db = initDb();
     return db.audit_logs;
-  }
+  },
+
+  // ─── Wallet Methods ───────────────────────────────────────────────────────
+  findOrCreateWallet: (customerId: string): WalletMock => {
+    const db = initDb();
+    let wallet = db.wallets.find(w => w.customerId === customerId);
+    if (wallet) return wallet;
+
+    wallet = {
+      id: crypto.randomUUID(),
+      customerId,
+      balance: 0,
+      freePan: 5,
+      freeCreditScore: 5,
+      freeAadhaar: 5,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    db.wallets.push(wallet);
+    saveDb(db);
+    return wallet;
+  },
+
+  getWalletBalance: (customerId: string): WalletMock | null => {
+    const db = initDb();
+    return db.wallets.find(w => w.customerId === customerId) || null;
+  },
+
+  // Atomic wallet deduction — returns null if insufficient balance
+  deductWalletBalance: (walletId: string, amount: number): WalletMock | null => {
+    const db = initDb();
+    const idx = db.wallets.findIndex(w => w.id === walletId);
+    if (idx === -1) return null;
+
+    const wallet = db.wallets[idx];
+    if (wallet.balance < amount) return null; // Insufficient balance
+
+    // Atomic: deduct and save
+    wallet.balance -= amount;
+    wallet.updatedAt = new Date().toISOString();
+    saveDb(db);
+    return wallet;
+  },
+
+  // Atomic wallet credit
+  creditWalletBalance: (walletId: string, amount: number): WalletMock | null => {
+    const db = initDb();
+    const idx = db.wallets.findIndex(w => w.id === walletId);
+    if (idx === -1) return null;
+
+    const wallet = db.wallets[idx];
+    wallet.balance += amount;
+    wallet.updatedAt = new Date().toISOString();
+    saveDb(db);
+    return wallet;
+  },
+
+  // Use free credit — returns true if credit was available
+  useFreeCredit: (customerId: string, type: 'PAN' | 'CREDIT_SCORE' | 'AADHAAR'): boolean => {
+    const db = initDb();
+    const wallet = db.wallets.find(w => w.customerId === customerId);
+    if (!wallet) return false;
+
+    const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
+    if (wallet[field] <= 0) return false;
+
+    wallet[field] -= 1;
+    wallet.updatedAt = new Date().toISOString();
+    saveDb(db);
+    return true;
+  },
+
+  // Restore free credit (on KYC failure)
+  restoreFreeCredit: (customerId: string, type: 'PAN' | 'CREDIT_SCORE' | 'AADHAAR'): void => {
+    const db = initDb();
+    const wallet = db.wallets.find(w => w.customerId === customerId);
+    if (!wallet) return;
+
+    const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
+    wallet[field] += 1;
+    wallet.updatedAt = new Date().toISOString();
+    saveDb(db);
+  },
+
+  // Create wallet transaction
+  createWalletTransaction: (
+    walletId: string,
+    type: string,
+    amount: number,
+    balanceAfter: number,
+    referenceId: string | null,
+    description: string | null,
+    metadata: string | null
+  ): WalletTransactionMock => {
+    const db = initDb();
+    const tx: WalletTransactionMock = {
+      id: crypto.randomUUID(),
+      walletId,
+      type,
+      amount,
+      balanceAfter,
+      referenceId,
+      description,
+      metadata,
+      createdAt: new Date().toISOString(),
+    };
+    db.wallet_transactions.push(tx);
+    saveDb(db);
+    return tx;
+  },
+
+  // Get wallet transactions
+  getWalletTransactions: (walletId: string, limit = 20, offset = 0): WalletTransactionMock[] => {
+    const db = initDb();
+    return db.wallet_transactions
+      .filter(tx => tx.walletId === walletId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(offset, offset + limit);
+  },
+
+  // ─── Payment Order Methods ────────────────────────────────────────────────
+  createPaymentOrder: (
+    customerId: string,
+    razorpayOrderId: string,
+    amount: number,
+    idempotencyKey: string
+  ): PaymentOrderMock => {
+    const db = initDb();
+    const order: PaymentOrderMock = {
+      id: crypto.randomUUID(),
+      customerId,
+      razorpayOrderId,
+      razorpayPaymentId: null,
+      amount,
+      currency: 'INR',
+      status: 'CREATED',
+      idempotencyKey,
+      receipt: null,
+      walletCredited: false,
+      failureReason: null,
+      metadata: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    db.payment_orders.push(order);
+    saveDb(db);
+    return order;
+  },
+
+  // Find order by Razorpay order ID
+  findPaymentOrderById: (razorpayOrderId: string): PaymentOrderMock | null => {
+    const db = initDb();
+    return db.payment_orders.find(o => o.razorpayOrderId === razorpayOrderId) || null;
+  },
+
+  // Find order by idempotency key (duplicate protection)
+  findPaymentOrderByIdempotencyKey: (key: string): PaymentOrderMock | null => {
+    const db = initDb();
+    return db.payment_orders.find(o => o.idempotencyKey === key) || null;
+  },
+
+  // Find order by Razorpay payment ID
+  findPaymentOrderByPaymentId: (paymentId: string): PaymentOrderMock | null => {
+    const db = initDb();
+    return db.payment_orders.find(o => o.razorpayPaymentId === paymentId) || null;
+  },
+
+  // Update payment order status
+  updatePaymentOrder: (orderId: string, updates: Partial<PaymentOrderMock>): PaymentOrderMock | null => {
+    const db = initDb();
+    const idx = db.payment_orders.findIndex(o => o.id === orderId);
+    if (idx === -1) return null;
+
+    db.payment_orders[idx] = {
+      ...db.payment_orders[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    saveDb(db);
+    return db.payment_orders[idx];
+  },
+
+  // Mark order as wallet credited (prevent double-credit)
+  markWalletCredited: (orderId: string): PaymentOrderMock | null => {
+    const db = initDb();
+    const idx = db.payment_orders.findIndex(o => o.id === orderId);
+    if (idx === -1) return null;
+
+    db.payment_orders[idx].walletCredited = true;
+    db.payment_orders[idx].status = 'CREDITED';
+    db.payment_orders[idx].updatedAt = new Date().toISOString();
+    saveDb(db);
+    return db.payment_orders[idx];
+  },
+
+  // ─── Webhook Event Methods ────────────────────────────────────────────────
+  findWebhookEventByEventId: (eventId: string): WebhookEventMock | null => {
+    const db = initDb();
+    return db.webhook_events.find(e => e.eventId === eventId) || null;
+  },
+
+  createWebhookEvent: (eventId: string, eventType: string, payload: string): WebhookEventMock => {
+    const db = initDb();
+    const event: WebhookEventMock = {
+      id: crypto.randomUUID(),
+      eventId,
+      eventType,
+      payload,
+      processed: false,
+      error: null,
+      createdAt: new Date().toISOString(),
+    };
+    db.webhook_events.push(event);
+    saveDb(db);
+    return event;
+  },
+
+  markWebhookEventProcessed: (eventId: string, error?: string): void => {
+    const db = initDb();
+    const event = db.webhook_events.find(e => e.eventId === eventId);
+    if (event) {
+      event.processed = !error;
+      event.error = error || null;
+      saveDb(db);
+    }
+  },
 };
