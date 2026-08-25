@@ -173,7 +173,9 @@ function initDb(): MockSchema {
   try {
     const content = fs.readFileSync(DB_FILE, 'utf-8');
     fileAvailable = true;
-    return JSON.parse(content);
+    // Merge with defaults to handle schema evolution (new collections)
+    const parsed = JSON.parse(content);
+    return { ...createEmptyDb(), ...parsed };
   } catch {
     const defaultDb = createEmptyDb();
     try {

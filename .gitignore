@@ -45,6 +45,15 @@ next-env.d.ts
 /mock-db.json
 /dev-output.txt
 
+# server logs
+*.log
+/server.log
+/dev-server.log
+/dev-server-error.log
+
+# temp migration files
+/wallet-migration.sql
+
 # uploads
 /public/uploads/
 

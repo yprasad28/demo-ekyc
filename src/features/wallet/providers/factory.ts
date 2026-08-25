@@ -1,4 +1,6 @@
 import type { PaymentProvider } from "./interfaces";
+import { RazorpayPaymentProvider } from "./razorpay/payments";
+import { MockPaymentProvider } from "./mock/payments";
 
 /**
  * Payment Provider Factory
@@ -11,16 +13,19 @@ import type { PaymentProvider } from "./interfaces";
  *   await provider.createOrder(amount, receipt);
  */
 
+let cachedProvider: PaymentProvider | null = null;
+
 export function createPaymentProvider(): PaymentProvider {
+  if (cachedProvider) return cachedProvider;
+
   const provider = process.env.WALLET_PROVIDER || "mock";
 
   if (provider === "razorpay") {
-    // Lazy import to avoid loading Razorpay SDK in mock mode
-    const { RazorpayPaymentProvider } = require("./razorpay/payments");
-    return new RazorpayPaymentProvider();
+    cachedProvider = new RazorpayPaymentProvider();
+  } else {
+    cachedProvider = new MockPaymentProvider();
   }
 
-  // Default: mock provider
-  const { MockPaymentProvider } = require("./mock/payments");
-  return new MockPaymentProvider();
+  console.log(`[wallet] Using provider: ${provider}`);
+  return cachedProvider;
 }

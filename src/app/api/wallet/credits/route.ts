@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireCustomerAuth } from "@/lib/auth";
+import { requireCustomerAuthOrTestMode } from "@/lib/auth";
 import { FREE_CREDITS } from "@/lib/constants";
 
 /**
@@ -20,7 +20,7 @@ import { FREE_CREDITS } from "@/lib/constants";
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = requireCustomerAuth(req);
+    const auth = requireCustomerAuthOrTestMode(req);
     if (auth instanceof NextResponse) return auth;
     const { customerId } = auth;
 

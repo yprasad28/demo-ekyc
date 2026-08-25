@@ -21,6 +21,24 @@ export function requireCustomerAuth(req: NextRequest): NextResponse | { customer
   return { customerId: payload.customerId };
 }
 
+/**
+ * Test mode: skips auth in development.
+ * Use for curl/Postman testing without JWT tokens.
+ * NEVER use in production.
+ */
+const TEST_CUSTOMER_ID = "test-customer-001";
+
+export function requireCustomerAuthOrTestMode(req: NextRequest): NextResponse | { customerId: string } {
+  if (process.env.NODE_ENV !== "production") {
+    // In development, allow test mode via header or default to test customer
+    const testMode = req.headers.get("x-test-mode");
+    if (testMode === "true" || testMode === "1") {
+      return { customerId: TEST_CUSTOMER_ID };
+    }
+  }
+  return requireCustomerAuth(req);
+}
+
 export function requireAdminAuth(req: NextRequest): NextResponse | AdminPayload {
   const payload = verifyAdminToken(req);
   if (!payload) {
