@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireCustomerAuth, getClientIp, getUserAgent } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limiter";
 import { DecentroDigiLockerProvider } from "@/features/kyc/providers/decentro/aadhaar";
+import { deductForVerification } from "@/lib/wallet-deduction";
 
 const provider = new DecentroDigiLockerProvider();
 
@@ -18,6 +19,12 @@ export async function POST(req: NextRequest) {
         { error: "Too many requests. Try again later." },
         { status: 429, headers: { "Retry-After": "600" } }
       );
+    }
+
+    // Wallet deduction: charge before initiating DigiLocker session
+    const deduction = await deductForVerification(customerId, "AADHAAR");
+    if (!deduction.success) {
+      return NextResponse.json({ error: deduction.error }, { status: 402 });
     }
 
     const session = await provider.initiateSession();

@@ -964,6 +964,7 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [needTopUp, setNeedTopUp] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [ocrRunning, setOcrRunning] = useState(false);
 
@@ -999,7 +1000,15 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
         body: JSON.stringify({ panNumber: pan.toUpperCase(), dob }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "PAN verification failed."); setLoading(false); return; }
+      if (!res.ok) {
+        if (res.status === 402) {
+          setError(`💰 ${data.error}`);
+          setNeedTopUp(true);
+        } else {
+          setError(data.error || "PAN verification failed.");
+        }
+        setLoading(false); return;
+      }
       onNext(data.panData, data.matchScore, data.dobMatch);
     } catch { setError("Network error."); }
     setLoading(false);
@@ -1045,7 +1054,19 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
           <p className="text-[11px] text-on-surface-variant mt-1">As mentioned in your official PAN card</p>
         </div>
         <MockDataHelper type="pan" />
-        {error && <p className="text-xs text-error">{error}</p>}
+        {error && (
+          <div className={`rounded-xl p-3 ${needTopUp ? "bg-red-50 border border-red-200" : ""}`}>
+            <p className="text-xs text-error">{error}</p>
+            {needTopUp && (
+              <button
+                onClick={() => window.open("/dashboard/wallet", "_blank")}
+                className="mt-2 text-xs font-semibold text-primary bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
+              >
+                Top Up Wallet
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <SubmitButton loading={loading} onClick={handleVerify} disabled={loading || !panValid || !dob} icon="arrow_forward">
         Verify & Proceed
@@ -1155,10 +1176,12 @@ function StepCibilScore({
   const [displayScore, setDisplayScore] = useState(0);
   const [category, setCategory] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [needTopUp, setNeedTopUp] = useState(false);
 
   const handleFetchScore = async () => {
     setStatus("loading");
     setErrorMessage("");
+    setNeedTopUp(false);
 
     try {
       const res = await fetch("/api/kyc/credit-score", {
@@ -1173,7 +1196,12 @@ function StepCibilScore({
 
       if (!res.ok) {
         setStatus("error");
-        setErrorMessage(data.error || "Failed to fetch credit score.");
+        if (res.status === 402) {
+          setErrorMessage(`💰 ${data.error}`);
+          setNeedTopUp(true);
+        } else {
+          setErrorMessage(data.error || "Failed to fetch credit score.");
+        }
         return;
       }
 
@@ -1382,22 +1410,32 @@ function StepCibilScore({
             </div>
             <p className="text-sm font-semibold text-on-surface mb-2">Unable to Fetch Score</p>
             <p className="text-xs text-on-surface-variant mb-4">{errorMessage}</p>
-            <div className="flex gap-3">
+            {needTopUp ? (
               <button
-                onClick={handleFetchScore}
-                className="flex-1 h-[48px] bg-surface-container rounded-full flex items-center justify-center gap-2 font-bold text-sm text-on-surface border border-outline-variant/30 active:scale-[0.98] transition-transform"
+                onClick={() => window.open("/dashboard/wallet", "_blank")}
+                className="w-full h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
               >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-                Retry
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                Top Up Wallet
               </button>
-              <button
-                onClick={onNext}
-                className="flex-1 h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
-              >
-                <span>Skip</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleFetchScore}
+                  className="flex-1 h-[48px] bg-surface-container rounded-full flex items-center justify-center gap-2 font-bold text-sm text-on-surface border border-outline-variant/30 active:scale-[0.98] transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">refresh</span>
+                  Retry
+                </button>
+                <button
+                  onClick={onNext}
+                  className="flex-1 h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+                >
+                  <span>Skip</span>
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

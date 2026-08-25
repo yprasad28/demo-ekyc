@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireCustomerAuthOrTestMode, getClientIp } from "@/lib/auth";
 import { createPaymentProvider } from "@/features/wallet/providers/factory";
 import { WalletTopupSchema } from "@/lib/validators";
+import { rateLimit } from "@/lib/rate-limiter";
 
 /**
  * POST /api/wallet/topup
@@ -29,6 +30,15 @@ export async function POST(req: NextRequest) {
     if (auth instanceof NextResponse) return auth;
     const { customerId } = auth;
 
+    // Rate limit: 5 top-up attempts per 15 minutes
+    const limiter = rateLimit(`wallet-topup:${customerId}`, 5, 15 * 60 * 1000);
+    if (!limiter.allowed) {
+      return NextResponse.json(
+        { error: "Too many top-up attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     // Step 2: Parse and validate request
     const body = await req.json();
     const parsed = WalletTopupSchema.safeParse(body);
@@ -46,12 +56,11 @@ export async function POST(req: NextRequest) {
     const existingOrder = await db.findPaymentOrderByIdempotencyKey(idempotencyKey);
     if (existingOrder) {
       // Return existing order — don't create a new one
-      const provider = createPaymentProvider();
       return NextResponse.json({
         success: true,
         orderId: existingOrder.razorpayOrderId,
         amount: existingOrder.amount,
-        keyId: provider instanceof Object && 'keyId' in provider ? "" : "", // Will be set below
+        keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         existing: true,
       });
     }

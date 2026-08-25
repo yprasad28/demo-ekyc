@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireCustomerAuth } from "@/lib/auth";
 import { fetchCreditScore } from "@/features/kyc/providers/decentro/credit-score";
+import { deductForVerification, refundForVerification } from "@/lib/wallet-deduction";
 
 // ─── Simulation Profiles (Decentro Staging Test Data) ────────────────────────
 // Used for testing when Aadhaar name doesn't match the test profile name.
@@ -74,6 +75,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Wallet deduction: charge before calling external API
+    const deduction = await deductForVerification(customerId, "CREDIT_SCORE");
+    if (!deduction.success) {
+      return NextResponse.json({ error: deduction.error }, { status: 402 });
+    }
+
     // ─── Fetch credit score (mock or real) ────────────────────────────────
     let result;
     try {
@@ -84,6 +91,7 @@ export async function POST(req: NextRequest) {
       console.log(`[credit-score] ❌ ERROR: ${errorMessage}`);
 
       if (errorMessage === "NO_CREDIT_HISTORY") {
+        await refundForVerification(customerId, "CREDIT_SCORE", deduction.usedFreeCredit ?? false);
         return NextResponse.json({
           success: true,
           noHistory: true,
@@ -92,12 +100,15 @@ export async function POST(req: NextRequest) {
       }
 
       if (errorMessage === "RATE_LIMIT_EXCEEDED") {
+        await refundForVerification(customerId, "CREDIT_SCORE", deduction.usedFreeCredit ?? false);
         return NextResponse.json(
           { error: "Rate limit exceeded. Please try again later." },
           { status: 429 }
         );
       }
 
+      // Refund on other errors
+      await refundForVerification(customerId, "CREDIT_SCORE", deduction.usedFreeCredit ?? false);
       console.error("[credit-score] API error:", errorMessage);
       return NextResponse.json(
         { error: "Unable to fetch credit score. Please try again." },

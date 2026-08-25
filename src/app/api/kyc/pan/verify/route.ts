@@ -5,12 +5,17 @@ import { NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY } from "@/lib/constants
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
 import { PanVerifySchema } from "@/lib/validators";
 import { createPanProvider } from "@/features/kyc/providers/factory";
+import { deductForVerification, refundForVerification } from "@/lib/wallet-deduction";
 
 export async function POST(req: NextRequest) {
+  let deductionUsedFreeCredit = false;
+  let deductionSuccess = false;
+  let customerId = "";
+
   try {
     const auth = requireCustomerAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
+    customerId = auth.customerId;
 
     const body = await req.json();
     const parsed = PanVerifySchema.safeParse(body);
@@ -22,9 +27,19 @@ export async function POST(req: NextRequest) {
     }
     const { panNumber, dob } = parsed.data;
 
+    // Wallet deduction: charge before calling external API
+    const deduction = await deductForVerification(customerId, "PAN");
+    deductionUsedFreeCredit = deduction.usedFreeCredit ?? false;
+    deductionSuccess = deduction.success;
+    if (!deduction.success) {
+      return NextResponse.json({ error: deduction.error }, { status: 402 });
+    }
+
     const panProvider = createPanProvider();
     const panData = await panProvider.verifyPan(panNumber);
     if (!panData) {
+      // Refund: PAN not found
+      await refundForVerification(customerId, "PAN", deductionUsedFreeCredit);
       return NextResponse.json({
         error: "PAN not found in NSDL database.",
         code: "PAN_NOT_FOUND",
@@ -37,7 +52,10 @@ export async function POST(req: NextRequest) {
     }
 
     const application = await db.findApplicationByCustomerId(customerId);
-    if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    if (!application) {
+      await refundForVerification(customerId, "PAN", deductionUsedFreeCredit);
+      return NextResponse.json({ error: "Application not found." }, { status: 404 });
+    }
 
     let matchScore = 0;
     let nameMatchWarning = false;
@@ -79,6 +97,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error in pan verify:", error);
+    if (deductionSuccess && customerId) {
+      await refundForVerification(customerId, "PAN", deductionUsedFreeCredit);
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

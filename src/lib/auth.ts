@@ -29,12 +29,14 @@ export function requireCustomerAuth(req: NextRequest): NextResponse | { customer
 const TEST_CUSTOMER_ID = "test-customer-001";
 
 export function requireCustomerAuthOrTestMode(req: NextRequest): NextResponse | { customerId: string } {
-  if (process.env.NODE_ENV !== "production") {
-    // In development, allow test mode via header or default to test customer
-    const testMode = req.headers.get("x-test-mode");
-    if (testMode === "true" || testMode === "1") {
-      return { customerId: TEST_CUSTOMER_ID };
-    }
+  // SEC-01: NEVER allow test mode in production, even if NODE_ENV is misconfigured
+  if (process.env.NODE_ENV === "production") {
+    return requireCustomerAuth(req);
+  }
+
+  const testMode = req.headers.get("x-test-mode");
+  if (testMode === "true" || testMode === "1") {
+    return { customerId: TEST_CUSTOMER_ID };
   }
   return requireCustomerAuth(req);
 }

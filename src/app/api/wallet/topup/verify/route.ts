@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireCustomerAuthOrTestMode, getClientIp } from "@/lib/auth";
 import { createPaymentProvider } from "@/features/wallet/providers/factory";
 import { WalletVerifySchema } from "@/lib/validators";
+import { rateLimit } from "@/lib/rate-limiter";
 
 /**
  * POST /api/wallet/topup/verify
@@ -30,6 +31,15 @@ export async function POST(req: NextRequest) {
     const auth = requireCustomerAuthOrTestMode(req);
     if (auth instanceof NextResponse) return auth;
     const { customerId } = auth;
+
+    // Rate limit: 10 verify attempts per 15 minutes
+    const limiter = rateLimit(`wallet-verify:${customerId}`, 10, 15 * 60 * 1000);
+    if (!limiter.allowed) {
+      return NextResponse.json(
+        { error: "Too many verification attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
 
     // Step 2: Parse and validate request
     const body = await req.json();
