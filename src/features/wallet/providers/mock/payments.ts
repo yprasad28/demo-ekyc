@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { PaymentProvider, CreateOrderResult, VerifyPaymentResult } from "../interfaces";
 
 /**
@@ -16,8 +17,8 @@ import type { PaymentProvider, CreateOrderResult, VerifyPaymentResult } from "..
 export class MockPaymentProvider implements PaymentProvider {
   async createOrder(
     amount: number,
-    receipt: string,
-    metadata?: Record<string, string>
+    _receipt: string,
+    _metadata?: Record<string, string>
   ): Promise<CreateOrderResult> {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 100));
