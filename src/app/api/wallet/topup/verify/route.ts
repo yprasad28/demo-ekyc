@@ -1,39 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireCustomerAuthOrTestMode, getClientIp } from "@/lib/auth";
+import { requireAdminAuth, getClientIp } from "@/lib/auth";
 import { createPaymentProvider } from "@/features/wallet/providers/factory";
 import { WalletVerifySchema } from "@/lib/validators";
 import { rateLimit } from "@/lib/rate-limiter";
+import { PLATFORM_OWNER_ID } from "@/lib/constants";
 
 /**
  * POST /api/wallet/topup/verify
  *
- * Verifies payment from Razorpay Checkout callback and credits wallet.
- *
- * THIS IS THE MOST CRITICAL ROUTE.
+ * Verifies payment from Razorpay Checkout callback and credits platform wallet.
+ * Admin authentication required.
  *
  * Flow:
- * 1. Authenticate customer
+ * 1. Authenticate admin
  * 2. Validate payment signature (HMAC-SHA256)
  * 3. Check if already credited (idempotency)
  * 4. Credit wallet (atomic)
  * 5. Create audit trail
- *
- * Failure scenarios handled:
- * - Invalid signature → reject, don't credit
- * - Double request → already credited, return success
- * - Razorpay order not found → reject
- * - Amount mismatch → reject (PAY-03: server-controlled amount)
  */
 export async function POST(req: NextRequest) {
   try {
-    // Step 1: Authenticate (SEC-01: derive user from JWT)
-    const auth = requireCustomerAuthOrTestMode(req);
+    const auth = requireAdminAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
 
-    // Rate limit: 10 verify attempts per 15 minutes
-    const limiter = rateLimit(`wallet-verify:${customerId}`, 10, 15 * 60 * 1000);
+    const limiter = rateLimit(`wallet-verify:${PLATFORM_OWNER_ID}`, 10, 15 * 60 * 1000);
     if (!limiter.allowed) {
       return NextResponse.json(
         { error: "Too many verification attempts. Please try again later." },
@@ -41,7 +32,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 2: Parse and validate request
     const body = await req.json();
     const parsed = WalletVerifySchema.safeParse(body);
 
@@ -54,7 +44,6 @@ export async function POST(req: NextRequest) {
 
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = parsed.data;
 
-    // Step 3: Verify signature (SEC-03: validate before any wallet change)
     const provider = createPaymentProvider();
     const verification = await provider.verifyPayment(
       razorpayOrderId,
@@ -63,35 +52,32 @@ export async function POST(req: NextRequest) {
     );
 
     if (!verification.verified) {
-      console.error(`[wallet-verify] ❌ Signature INVALID for order: ${razorpayOrderId}`);
+      console.error(`[wallet-verify] Signature INVALID for order: ${razorpayOrderId}`);
       return NextResponse.json(
         { error: "Payment verification failed. Please try again." },
         { status: 400 }
       );
     }
 
-    // Step 4: Find order in DB
     const order = await db.findPaymentOrderById(razorpayOrderId);
     if (!order) {
-      console.error(`[wallet-verify] ❌ Order not found: ${razorpayOrderId}`);
+      console.error(`[wallet-verify] Order not found: ${razorpayOrderId}`);
       return NextResponse.json(
         { error: "Order not found." },
         { status: 404 }
       );
     }
 
-    // Step 5: Verify amount matches (PAY-03: server-controlled amount)
     if (verification.amount !== order.amount) {
-      console.error(`[wallet-verify] ❌ Amount mismatch: expected ${order.amount}, got ${verification.amount}`);
+      console.error(`[wallet-verify] Amount mismatch: expected ${order.amount}, got ${verification.amount}`);
       return NextResponse.json(
         { error: "Payment amount mismatch." },
         { status: 400 }
       );
     }
 
-    // Step 6: Idempotency — check if already credited (PAY-01: prevent double credit)
     if (order.walletCredited) {
-      console.log(`[wallet-verify] ✅ Already credited: ${razorpayOrderId}`);
+      console.log(`[wallet-verify] Already credited: ${razorpayOrderId}`);
       return NextResponse.json({
         success: true,
         message: "Wallet already credited.",
@@ -99,9 +85,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Step 7: Verify payment status
     if (verification.status !== "captured") {
-      // Payment not captured yet — update order status
       await db.updatePaymentOrder(order.id, {
         status: "PAYMENT_RECEIVED",
         razorpayPaymentId: razorpayPaymentId,
@@ -114,8 +98,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Step 8: Credit wallet (atomic — WAL-01: concurrent safety)
-    const wallet = await db.findOrCreateWallet(customerId);
+    const wallet = await db.findOrCreateWallet(PLATFORM_OWNER_ID);
     if (!wallet) {
       return NextResponse.json(
         { error: "Wallet not found." },
@@ -123,44 +106,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Atomic credit — single DB operation
     const updatedWallet = await db.creditWalletBalance(wallet.id, order.amount);
     if (!updatedWallet) {
-      console.error(`[wallet-verify] ❌ Failed to credit wallet for order: ${razorpayOrderId}`);
+      console.error(`[wallet-verify] Failed to credit wallet for order: ${razorpayOrderId}`);
       return NextResponse.json(
         { error: "Failed to credit wallet." },
         { status: 500 }
       );
     }
 
-    // Step 9: Record transaction (DB-01: ledger + balance must agree)
     await db.createWalletTransaction(
       wallet.id,
       "TOPUP",
       order.amount,
       updatedWallet.balance,
       razorpayOrderId,
-      `Wallet top-up via Razorpay`,
+      `Platform wallet top-up via Razorpay`,
       JSON.stringify({ razorpayPaymentId, razorpayOrderId })
     );
 
-    // Step 10: Mark order as credited (PAY-01: prevent double-credit on webhook)
     await db.markWalletCredited(order.id);
 
-    // Step 11: Audit log
     const ipAddress = getClientIp(req);
     await db.createAuditLog(
-      customerId,
-      "WALLET_CREDITED",
+      PLATFORM_OWNER_ID,
+      "PLATFORM_WALLET_CREDITED",
       `₹${order.amount / 100} credited. Order: ${razorpayOrderId}, Payment: ${razorpayPaymentId}`,
       ipAddress
     );
 
-    console.log(`[wallet-verify] ✅ Wallet credited: ₹${order.amount / 100} for order ${razorpayOrderId}`);
+    console.log(`[wallet-verify] Platform wallet credited: ₹${order.amount / 100} for order ${razorpayOrderId}`);
 
     return NextResponse.json({
       success: true,
-      message: `₹${order.amount / 100} credited to wallet.`,
+      message: `₹${order.amount / 100} credited to platform wallet.`,
       balance: updatedWallet.balance,
       balanceFormatted: updatedWallet.balance / 100,
     });

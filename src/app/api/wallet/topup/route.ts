@@ -1,37 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireCustomerAuthOrTestMode, getClientIp } from "@/lib/auth";
+import { requireAdminAuth, getClientIp } from "@/lib/auth";
 import { createPaymentProvider } from "@/features/wallet/providers/factory";
 import { WalletTopupSchema } from "@/lib/validators";
 import { rateLimit } from "@/lib/rate-limiter";
+import { PLATFORM_OWNER_ID } from "@/lib/constants";
 
 /**
  * POST /api/wallet/topup
  *
- * Creates a Razorpay order for wallet top-up.
+ * Creates a Razorpay order for platform wallet top-up.
+ * Admin authentication required.
  *
  * Flow:
- * 1. Authenticate customer
- * 2. Validate amount (server-controlled, not from client)
- * 3. Check idempotency (prevent duplicate orders)
+ * 1. Authenticate admin
+ * 2. Validate amount
+ * 3. Check idempotency
  * 4. Create Razorpay order
  * 5. Store order in DB
  * 6. Return order details for frontend Checkout.js
- *
- * Why this order matters:
- * - Amount validation prevents malicious users from paying ₹1 and crediting ₹1000
- * - Idempotency prevents double orders on retry
- * - DB record enables reconciliation
  */
 export async function POST(req: NextRequest) {
   try {
-    // Step 1: Authenticate (SEC-01: derive user from JWT, not client)
-    const auth = requireCustomerAuthOrTestMode(req);
+    const auth = requireAdminAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
 
-    // Rate limit: 5 top-up attempts per 15 minutes
-    const limiter = rateLimit(`wallet-topup:${customerId}`, 5, 15 * 60 * 1000);
+    const limiter = rateLimit(`wallet-topup:${PLATFORM_OWNER_ID}`, 5, 15 * 60 * 1000);
     if (!limiter.allowed) {
       return NextResponse.json(
         { error: "Too many top-up attempts. Please try again later." },
@@ -39,7 +33,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 2: Parse and validate request
     const body = await req.json();
     const parsed = WalletTopupSchema.safeParse(body);
 
@@ -52,10 +45,8 @@ export async function POST(req: NextRequest) {
 
     const { amount, idempotencyKey } = parsed.data;
 
-    // Step 3: Idempotency check (PAY-02: prevent duplicate orders)
     const existingOrder = await db.findPaymentOrderByIdempotencyKey(idempotencyKey);
     if (existingOrder) {
-      // Return existing order — don't create a new one
       return NextResponse.json({
         success: true,
         orderId: existingOrder.razorpayOrderId,
@@ -65,39 +56,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Step 4: Create Razorpay order
     const provider = createPaymentProvider();
-    const receipt = `topup_${customerId.slice(0, 8)}_${Date.now()}`;
+    const receipt = `topup_owner_${Date.now()}`;
 
     const order = await provider.createOrder(amount, receipt, {
-      customerId,
-      purpose: "wallet_topup",
+      customerId: PLATFORM_OWNER_ID,
+      purpose: "platform_wallet_topup",
     });
 
-    // Step 5: Store order in DB (for reconciliation)
     await db.createPaymentOrder(
-      customerId,
+      PLATFORM_OWNER_ID,
       order.orderId,
       amount,
       idempotencyKey
     );
 
-    // Step 6: Audit log
     const ipAddress = getClientIp(req);
     await db.createAuditLog(
-      customerId,
-      "WALLET_TOPUP_INITIATED",
+      PLATFORM_OWNER_ID,
+      "PLATFORM_WALLET_TOPUP_INITIATED",
       `Order ${order.orderId} for ₹${amount / 100}`,
       ipAddress
     );
 
-    // Step 7: Return order for frontend
     return NextResponse.json({
       success: true,
       orderId: order.orderId,
       amount: order.amount,
       currency: order.currency,
-      keyId: order.keyId, // Public key for Checkout.js
+      keyId: order.keyId,
     });
   } catch (error) {
     console.error("[wallet-topup] Error:", error);

@@ -1,30 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireCustomerAuthOrTestMode } from "@/lib/auth";
-import { FREE_CREDITS } from "@/lib/constants";
+import { requireAdminAuth } from "@/lib/auth";
+import { FREE_CREDITS, PLATFORM_OWNER_ID } from "@/lib/constants";
 
 /**
  * GET /api/wallet/credits
  *
- * Returns remaining free credits for each KYC service.
- *
- * Response:
- * {
- *   success: true,
- *   credits: {
- *     pan: { remaining: 5, total: 5 },
- *     creditScore: { remaining: 5, total: 5 },
- *     aadhaar: { remaining: 5, total: 5 },
- *   },
- * }
+ * Returns remaining free credits for each KYC service for the platform owner.
+ * Admin authentication required.
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = requireCustomerAuthOrTestMode(req);
+    const auth = requireAdminAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
 
-    const wallet = await db.findOrCreateWallet(customerId);
+    const wallet = await db.findOrCreateWallet(PLATFORM_OWNER_ID);
 
     return NextResponse.json({
       success: true,

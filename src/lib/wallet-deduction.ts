@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { KYC_PRICING } from "./constants";
+import { KYC_PRICING, PLATFORM_OWNER_ID } from "./constants";
 
 type ServiceType = "PAN" | "AADHAAR" | "CREDIT_SCORE";
 
@@ -23,27 +23,28 @@ interface RefundResult {
 }
 
 /**
- * Deduct wallet balance (or free credit) before a KYC verification.
+ * Deduct from PLATFORM OWNER wallet before a KYC verification.
  *
  * Flow:
- * 1. Find or create wallet
+ * 1. Find or create PLATFORM OWNER wallet (not customer wallet)
  * 2. Try free credit first (PAN: 5, Aadhaar: 5, Credit Score: 5)
  * 3. If no free credit → deduct from balance
- * 4. If insufficient balance → return error with 402 status message
- * 5. Record transaction for audit trail
+ * 4. If insufficient balance → return error
+ * 5. Record transaction for audit trail (includes customerId for reference)
  */
 export async function deductForVerification(
   customerId: string,
   serviceType: ServiceType
 ): Promise<DeductionResult> {
   try {
-    const wallet = await db.findOrCreateWallet(customerId);
+    // Always deduct from platform owner's wallet
+    const wallet = await db.findOrCreateWallet(PLATFORM_OWNER_ID);
     if (!wallet) {
-      return { success: false, error: "Wallet not found." };
+      return { success: false, error: "Platform wallet not found." };
     }
 
-    // Step 1: Try free credit first
-    const usedFree = await db.useFreeCredit(customerId, serviceType);
+    // Step 1: Try free credit first (from platform owner wallet)
+    const usedFree = await db.useFreeCredit(PLATFORM_OWNER_ID, serviceType);
     if (usedFree) {
       await db.createWalletTransaction(
         wallet.id,
@@ -51,13 +52,13 @@ export async function deductForVerification(
         0,
         wallet.balance,
         null,
-        `Free ${serviceType} verification`,
+        `Free ${serviceType} verification (customer: ${customerId})`,
         null
       );
       return { success: true, usedFreeCredit: true, walletId: wallet.id, newBalance: wallet.balance };
     }
 
-    // Step 2: Deduct from balance
+    // Step 2: Deduct from platform owner's balance
     const pricingKey = PRICING_KEY[serviceType];
     const priceInPaise = KYC_PRICING[pricingKey].price * 100;
     const updatedWallet = await db.deductWalletBalance(wallet.id, priceInPaise);
@@ -65,18 +66,18 @@ export async function deductForVerification(
     if (!updatedWallet) {
       return {
         success: false,
-        error: `Insufficient balance. Required ₹${KYC_PRICING[pricingKey].price} for ${KYC_PRICING[pricingKey].label}. Please top up your wallet.`,
+        error: `Insufficient platform balance. Required ₹${KYC_PRICING[pricingKey].price} for ${KYC_PRICING[pricingKey].label}. Please top up platform wallet.`,
       };
     }
 
-    // Step 3: Record transaction
+    // Step 3: Record transaction with customer reference
     await db.createWalletTransaction(
       wallet.id,
       "KYC_DEDUCTION",
       -priceInPaise,
       updatedWallet.balance,
       null,
-      `${KYC_PRICING[pricingKey].label} verification`,
+      `${KYC_PRICING[pricingKey].label} verification (customer: ${customerId})`,
       null
     );
 
@@ -93,7 +94,7 @@ export async function deductForVerification(
 }
 
 /**
- * Refund wallet after a failed KYC verification.
+ * Refund PLATFORM OWNER wallet after a failed KYC verification.
  *
  * If free credit was used → restore it
  * If balance was deducted → credit it back
@@ -105,20 +106,21 @@ export async function refundForVerification(
   usedFreeCredit: boolean
 ): Promise<RefundResult> {
   try {
-    const wallet = await db.findOrCreateWallet(customerId);
+    // Always refund to platform owner's wallet
+    const wallet = await db.findOrCreateWallet(PLATFORM_OWNER_ID);
     if (!wallet) {
-      return { success: false, error: "Wallet not found for refund." };
+      return { success: false, error: "Platform wallet not found for refund." };
     }
 
     if (usedFreeCredit) {
-      await db.restoreFreeCredit(customerId, serviceType);
+      await db.restoreFreeCredit(PLATFORM_OWNER_ID, serviceType);
       await db.createWalletTransaction(
         wallet.id,
         "FREE_CREDIT_RESTORE",
         0,
         wallet.balance,
         null,
-        `Restored free ${serviceType} credit (verification failed)`,
+        `Restored free ${serviceType} credit (customer: ${customerId}, verification failed)`,
         null
       );
     } else {
@@ -133,7 +135,7 @@ export async function refundForVerification(
           priceInPaise,
           refundedWallet.balance,
           null,
-          `Refund: ${KYC_PRICING[pricingKey].label} verification failed`,
+          `Refund: ${KYC_PRICING[pricingKey].label} verification failed (customer: ${customerId})`,
           null
         );
       }

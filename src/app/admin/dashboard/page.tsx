@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Application {
   id: string;
   customerId: string;
@@ -36,7 +36,7 @@ interface Stats {
   underReview: number; approved: number; rejected: number;
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Status Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatusBadge({ status }: { status: Application["status"] }) {
   const config = {
     PENDING:      { color: "bg-yellow-100 text-yellow-700 border-yellow-200", icon: "schedule", label: "Pending" },
@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: Application["status"] }) {
   );
 }
 
-// ─── Application Detail Modal ─────────────────────────────────────────────────
+// â”€â”€â”€ Application Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ApplicationModal({
   app, onClose, onApprove, onReject
 }: {
@@ -129,12 +129,12 @@ function ApplicationModal({
               ].map((r) => (
                 <div key={r.label}>
                   <p className="text-[11px] font-semibold text-on-surface-variant uppercase">{r.label}</p>
-                  <p className="font-medium text-on-surface">{r.value || "—"}</p>
+                  <p className="font-medium text-on-surface">{r.value || "â€”"}</p>
                 </div>
               ))}
               <div className="col-span-2">
                 <p className="text-[11px] font-semibold text-on-surface-variant uppercase mb-1">Address</p>
-                <p className="font-medium text-on-surface text-xs">{app.aadhaarAddress || "—"}</p>
+                <p className="font-medium text-on-surface text-xs">{app.aadhaarAddress || "â€”"}</p>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ function ApplicationModal({
               ].map((r) => (
                 <div key={r.label}>
                   <p className="text-[11px] font-semibold text-on-surface-variant uppercase">{r.label}</p>
-                  <p className="font-medium text-on-surface">{r.value || "—"}</p>
+                  <p className="font-medium text-on-surface">{r.value || "â€”"}</p>
                 </div>
               ))}
             </div>
@@ -167,7 +167,7 @@ function ApplicationModal({
                 <div className="flex justify-between mb-1">
                   <span className="text-xs font-semibold text-on-surface-variant">Name Match Score</span>
                   <span className={`text-xs font-bold ${app.panMatchScore >= 60 ? "text-green-600" : "text-red-500"}`}>
-                    {app.panMatchScore}% {app.panMatchScore >= 60 ? "✓" : "✗"}
+                    {app.panMatchScore}% {app.panMatchScore >= 60 ? "âœ“" : "âœ—"}
                   </span>
                 </div>
                 <div className="h-2 bg-surface-container rounded-full overflow-hidden">
@@ -308,7 +308,7 @@ function ApplicationModal({
   );
 }
 
-// ─── Main Dashboard Page ──────────────────────────────────────────────────────
+// â”€â”€â”€ Main Dashboard Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -414,6 +414,9 @@ export default function AdminDashboard() {
           <div className="nav-item active">
             <span className="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
           </div>
+          <Link href="/admin/wallet" className="nav-item">
+            <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span> Wallet
+          </Link>
           <div className="nav-item">
             <span className="material-symbols-outlined text-[20px]">people</span> Applications
           </div>
@@ -444,7 +447,7 @@ export default function AdminDashboard() {
         <header className="sticky top-0 z-20 glass-nav border-b border-outline-variant/20 flex items-center justify-between px-6 h-14">
           <div>
             <h1 className="font-bold text-base text-on-surface">KYC Admin Dashboard</h1>
-            <p className="text-[11px] text-on-surface-variant">Real-time monitoring · Auto-refresh every 5s</p>
+            <p className="text-[11px] text-on-surface-variant">Real-time monitoring Â· Auto-refresh every 5s</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full">
@@ -547,11 +550,11 @@ export default function AdminDashboard() {
                                 <span className="material-symbols-outlined text-primary text-[14px]">person</span>
                               </div>
                             )}
-                            <span className="font-medium text-on-surface truncate max-w-[120px]">{app.aadhaarName || "—"}</span>
+                            <span className="font-medium text-on-surface truncate max-w-[120px]">{app.aadhaarName || "â€”"}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-on-surface-variant font-mono text-xs">{app.customer?.mobile}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">{app.panNumber || "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">{app.panNumber || "â€”"}</td>
                         <td className="px-4 py-3"><StatusBadge status={app.status} /></td>
                         <td className="px-4 py-3">
                           <span className="text-xs font-medium text-on-surface-variant">{app.currentStep}/7</span>

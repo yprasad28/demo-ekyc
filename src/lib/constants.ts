@@ -5,6 +5,9 @@ export const ADMIN_TOKEN_MAX_AGE = 28800; // 8 hours in seconds
 export const CUSTOMER_TOKEN_EXPIRY = "24h";
 export const ADMIN_TOKEN_EXPIRY = "8h";
 
+// Platform Owner (single wallet for all KYC deductions)
+export const PLATFORM_OWNER_ID = "platform-owner-001";
+
 // KYC Flow
 export const TOTAL_STEPS = 8;
 export const OTP_LENGTH = 6;

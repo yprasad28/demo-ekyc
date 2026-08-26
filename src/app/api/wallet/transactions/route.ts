@@ -1,35 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireCustomerAuthOrTestMode } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/auth";
+import { PLATFORM_OWNER_ID } from "@/lib/constants";
 
 /**
  * GET /api/wallet/transactions
  *
- * Returns paginated transaction history for the customer's wallet.
+ * Returns paginated transaction history for the platform owner's wallet.
+ * Admin authentication required.
  *
  * Query params:
  *   limit  - Number of transactions to return (default: 20)
  *   offset - Number to skip (default: 0)
- *
- * Response:
- * {
- *   success: true,
- *   transactions: [...],
- *   total: 42,
- * }
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = requireCustomerAuthOrTestMode(req);
+    const auth = requireAdminAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
 
-    // Parse query params
     const url = new URL(req.url);
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 100);
     const offset = parseInt(url.searchParams.get("offset") || "0");
 
-    const wallet = await db.findOrCreateWallet(customerId);
+    const wallet = await db.findOrCreateWallet(PLATFORM_OWNER_ID);
     const transactions = await db.getWalletTransactions(wallet.id, limit, offset);
 
     return NextResponse.json({
