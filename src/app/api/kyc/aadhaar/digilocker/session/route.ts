@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error in DigiLocker session:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

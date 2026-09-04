@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Types ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | "test-bypass" | "complete";
 
 interface AadhaarData {
@@ -15,7 +15,7 @@ interface PanData {
   status: string; panType: string;
 }
 
-// â”€â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Toast ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => {
     const t = setTimeout(onClose, 8000);
@@ -38,7 +38,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-// â”€â”€â”€ Back Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Back Button ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function BackButton({ onBack }: { onBack: () => void }) {
   return (
     <button onClick={onBack} className="flex items-center gap-1 text-secondary text-sm mb-3 hover:text-primary transition-colors">
@@ -48,7 +48,7 @@ function BackButton({ onBack }: { onBack: () => void }) {
   );
 }
 
-// â”€â”€â”€ Mock Data Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Mock Data Helper ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function MockDataHelper({ type }: { type: "aadhaar" | "pan" }) {
   const [open, setOpen] = useState(false);
   const aadhaarData = [
@@ -102,7 +102,7 @@ function MockDataHelper({ type }: { type: "aadhaar" | "pan" }) {
   );
 }
 
-// â”€â”€â”€ Top Navigation Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Top Navigation Bar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function TopNav() {
   return (
     <header className="sticky top-0 z-50 glass-nav border-b border-outline-variant/20">
@@ -124,7 +124,7 @@ function TopNav() {
   );
 }
 
-// â”€â”€â”€ Step Hero Panel (Left Side) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step Hero Panel (Left Side) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepHero({ step }: { step: Step }) {
   const heroData: Record<number, { title: string; desc: string; icon: string; badge: string; features: { icon: string; title: string; desc: string }[] }> = {
     1: {
@@ -229,7 +229,7 @@ function StepHero({ step }: { step: Step }) {
   );
 }
 
-// â”€â”€â”€ Complete Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Complete Hero ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function CompleteHero() {
   return (
     <div className="hidden lg:flex w-[45%] hero-gradient relative items-center justify-center p-10 overflow-hidden">
@@ -253,7 +253,7 @@ function CompleteHero() {
   );
 }
 
-// â”€â”€â”€ Progress Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Progress Bar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function ProgressBar({ step, totalSteps = 8 }: { step: Step; totalSteps?: number }) {
   const numStep = step === "complete" ? totalSteps : (step as number);
   const stepLabels = ["Mobile OTP", "Email", "Consent", "Aadhaar", "PAN", "Credit Score", "Documents", "Complete"];
@@ -278,7 +278,7 @@ function ProgressBar({ step, totalSteps = 8 }: { step: Step; totalSteps?: number
   );
 }
 
-// â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Footer ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function Footer() {
   return (
     <div className="flex flex-col items-center gap-3 pt-6 pb-4">
@@ -290,12 +290,12 @@ function Footer() {
         <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
         <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
       </div>
-      <p className="text-[10px] text-on-surface-variant">Â© 2024 SecureKYC. Bank-grade 256-bit encryption.</p>
+      <p className="text-[10px] text-on-surface-variant">┬⌐ 2024 SecureKYC. Bank-grade 256-bit encryption.</p>
     </div>
   );
 }
 
-// â”€â”€â”€ Step 1: Mobile Entry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 1: Mobile Entry ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepMobile({ onNext, onShowOtp }: { onNext: (mobile: string) => void; onShowOtp: (otp: string) => void }) {
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
@@ -361,7 +361,7 @@ function StepMobile({ onNext, onShowOtp }: { onNext: (mobile: string) => void; o
   );
 }
 
-// â”€â”€â”€ Step 2: OTP Verification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 2: OTP Verification ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepOTP({ mobile, onNext, onBack, onShowOtp }: { mobile: string; onNext: () => void; onBack: () => void; onShowOtp: (otp: string) => void }) {
   const [otpDigits, setOtpDigits] = useState(["","","","","",""]);
   const [timer, setTimer] = useState(30);
@@ -427,7 +427,7 @@ function StepOTP({ mobile, onNext, onBack, onShowOtp }: { mobile: string; onNext
       <div>
         <BackButton onBack={onBack} />
         <h2 className="text-lg font-bold text-on-background">Verify your number</h2>
-        <p className="text-sm text-secondary mt-1">We&apos;ll send a 6-digit code to +91 â€¢â€¢â€¢â€¢â€¢â€¢ â€¢â€¢{mobile.slice(-2)} to verify it&apos;s you</p>
+        <p className="text-sm text-secondary mt-1">We&apos;ll send a 6-digit code to +91 ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó ΓÇóΓÇó{mobile.slice(-2)} to verify it&apos;s you</p>
       </div>
       <div>
         <div className="flex justify-center gap-3">
@@ -471,7 +471,7 @@ function StepOTP({ mobile, onNext, onBack, onShowOtp }: { mobile: string; onNext
   );
 }
 
-// â”€â”€â”€ Step 3: Email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 3: Email ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepEmail({ token, onNext, onBack }: { token: string; onNext: () => void; onBack: () => void }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -517,7 +517,7 @@ function StepEmail({ token, onNext, onBack }: { token: string; onNext: () => voi
   );
 }
 
-// â”€â”€â”€ Step 4: Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 4: Consent ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepConsent({ token, onNext, onBack }: { token: string; onNext: () => void; onBack: () => void }) {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -574,7 +574,7 @@ function StepConsent({ token, onNext, onBack }: { token: string; onNext: () => v
   );
 }
 
-// â”€â”€â”€ Step 5: Aadhaar Verification (with tabs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 5: Aadhaar Verification (with tabs) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNext: (data: AadhaarData) => void; onBack: () => void; onShowOtp: (otp: string) => void }) {
   // back button rendered inside the return
   const [activeTab, setActiveTab] = useState<"digilocker" | "manual" | "xml" | "qr">("digilocker");
@@ -858,13 +858,13 @@ function StepAadhaar({ token, onNext, onBack, onShowOtp }: { token: string; onNe
       )}
 
       <InfoBanner color="green" icon="verified_user">
-        <p className="text-xs font-medium text-green-700">Data Privacy Guaranteed â€” Your data is encrypted using AES-256 standards.</p>
+        <p className="text-xs font-medium text-green-700">Data Privacy Guaranteed ΓÇö Your data is encrypted using AES-256 standards.</p>
       </InfoBanner>
     </div>
   );
 }
 
-// â”€â”€â”€ Step 5b: Review Aadhaar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 5b: Review Aadhaar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData: AadhaarData; token: string; onNext: () => void; onBack: () => void }) {
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(aadhaarData.name);
@@ -958,13 +958,13 @@ function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData
   );
 }
 
-// â”€â”€â”€ Step 6: PAN Verification (with tabs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 6: PAN Verification (with tabs) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string; onNext: (data: PanData, score: number, dobMatch: boolean) => void; onBack: () => void }) {
   const [pan, setPan] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  const [needTopUp, setNeedTopUp] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [ocrRunning, setOcrRunning] = useState(false);
 
@@ -1001,7 +1001,12 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "PAN verification failed.");
+        if (res.status === 402) {
+          setError(`≡ƒÆ░ ${data.error}`);
+          setNeedTopUp(true);
+        } else {
+          setError(data.error || "PAN verification failed.");
+        }
         setLoading(false); return;
       }
       onNext(data.panData, data.matchScore, data.dobMatch);
@@ -1023,7 +1028,7 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
           <div className="flex flex-col items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[36px]">{ocrRunning ? "progress_activity" : "upload_file"}</span>
             <p className="text-sm font-semibold text-on-surface">{ocrRunning ? "Uploading..." : "Upload PAN Card"}</p>
-            <p className="text-xs text-on-surface-variant">JPG, PNG, PDF â€” Max 5MB</p>
+            <p className="text-xs text-on-surface-variant">JPG, PNG, PDF ΓÇö Max 5MB</p>
           </div>
           {uploadedFile && !ocrRunning && (
             <p className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1 justify-center">
@@ -1050,9 +1055,16 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
         </div>
         <MockDataHelper type="pan" />
         {error && (
-          <div className="rounded-xl p-3 bg-red-50 border border-red-200">
+          <div className={`rounded-xl p-3 ${needTopUp ? "bg-red-50 border border-red-200" : ""}`}>
             <p className="text-xs text-error">{error}</p>
-            
+            {needTopUp && (
+              <button
+                onClick={() => window.open("/dashboard/wallet", "_blank")}
+                className="mt-2 text-xs font-semibold text-primary bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
+              >
+                Top Up Wallet
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1067,7 +1079,7 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
   );
 }
 
-// â”€â”€â”€ Step 6b: Name Match â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 6b: Name Match ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack, dobMatch = true }: { panData: PanData; matchScore: number; aadhaarName: string; token: string; onNext: () => void; onBack: () => void; dobMatch?: boolean }) {
   const [loading, setLoading] = useState(false);
   const isGoodMatch = matchScore >= 60;
@@ -1149,7 +1161,7 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
   );
 }
 
-// â”€â”€â”€ Step 7: CIBIL Score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ΓöÇΓöÇΓöÇ Step 7: CIBIL Score ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function StepCibilScore({
   token,
   onNext,
@@ -1164,12 +1176,12 @@ function StepCibilScore({
   const [displayScore, setDisplayScore] = useState(0);
   const [category, setCategory] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
+  const [needTopUp, setNeedTopUp] = useState(false);
 
   const handleFetchScore = async () => {
     setStatus("loading");
     setErrorMessage("");
-
+    setNeedTopUp(false);
 
     try {
       const res = await fetch("/api/kyc/credit-score", {
@@ -1184,12 +1196,12 @@ function StepCibilScore({
 
       if (!res.ok) {
         setStatus("error");
-        setErrorMessage(data.error || "Failed to fetch credit score.");
-
-
-
-
-
+        if (res.status === 402) {
+          setErrorMessage(`≡ƒÆ░ ${data.error}`);
+          setNeedTopUp(true);
+        } else {
+          setErrorMessage(data.error || "Failed to fetch credit score.");
+        }
         return;
       }
 
@@ -1243,10 +1255,10 @@ function StepCibilScore({
       <div>
         <BackButton onBack={onBack} />
         <h2 className="text-lg font-bold text-on-background">Your Credit Score</h2>
-        <p className="text-sm text-secondary mt-1">Fetched from Equifax Bureau (Soft enquiry â€” no score impact)</p>
+        <p className="text-sm text-secondary mt-1">Fetched from Equifax Bureau (Soft enquiry ΓÇö no score impact)</p>
       </div>
 
-      {/* Idle State â€” Fetch Button */}
+      {/* Idle State ΓÇö Fetch Button */}
       {status === "idle" && (
         <div className="space-y-4">
           <div className="card text-center py-6">
@@ -1267,7 +1279,7 @@ function StepCibilScore({
           </div>
           <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-xl border border-green-100">
             <span className="material-symbols-outlined text-green-600 text-[16px]" style={FILLED}>verified</span>
-            <p className="text-xs font-medium text-green-700">Soft enquiry â€” No impact on your credit score</p>
+            <p className="text-xs font-medium text-green-700">Soft enquiry ΓÇö No impact on your credit score</p>
           </div>
         </div>
       )}
@@ -1398,25 +1410,415 @@ function StepCibilScore({
             </div>
             <p className="text-sm font-semibold text-on-surface mb-2">Unable to Fetch Score</p>
             <p className="text-xs text-on-surface-variant mb-4">{errorMessage}</p>
-            <div className="flex gap-3">
+            {needTopUp ? (
               <button
-                onClick={handleFetchScore}
-                className="flex-1 h-[48px] bg-surface-container rounded-full flex items-center justify-center gap-2 font-bold text-sm text-on-surface border border-outline-variant/30 active:scale-[0.98] transition-transform"
+                onClick={() => window.open("/dashboard/wallet", "_blank")}
+                className="w-full h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
               >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-                Retry
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                Top Up Wallet
               </button>
-              <button
-                onClick={onNext}
-                className="flex-1 h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
-              >
-                <span>Skip</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleFetchScore}
+                  className="flex-1 h-[48px] bg-surface-container rounded-full flex items-center justify-center gap-2 font-bold text-sm text-on-surface border border-outline-variant/30 active:scale-[0.98] transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">refresh</span>
+                  Retry
+                </button>
+                <button
+                  onClick={onNext}
+                  className="flex-1 h-[48px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-sm shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
+                >
+                  <span>Skip</span>
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ΓöÇΓöÇΓöÇ Test Bypass: Skip to Credit Score ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+function StepTestBypass({
+  mobile,
+  token,
+  onNext,
+  onBack,
+}: {
+  mobile: string;
+  token: string;
+  onNext: (name: string) => void;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
+  const handleProceed = async () => {
+    if (!name.trim()) {
+      setError("Please enter a name for Credit Score API test.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/kyc/save-step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ step: 5, data: { aadhaarName: name.trim() } }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to save name. Try again.");
+        setSaving(false);
+        return;
+      }
+      onNext(name.trim());
+    } catch {
+      setError("Network error. Please try again.");
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5 animate-slide-up">
+      <div>
+        <BackButton onBack={onBack} />
+        <h2 className="text-lg font-bold text-on-background">Test Mode ΓÇö Credit Score API</h2>
+        <p className="text-sm text-secondary mt-1">Skip DigiLocker and directly test the real Credit Score API</p>
+      </div>
+
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-600 text-[20px] mt-0.5" style={FILLED}>warning</span>
+          <div>
+            <p className="text-xs font-semibold text-amber-800">Test Mode Active</p>
+            <p className="text-xs text-amber-700 mt-1">
+              This bypasses Aadhaar/PAN verification. The name you enter will be sent to the real Decentro Credit Score API.
+              A transaction will appear in your Decentro dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="card space-y-4">
+        <div>
+          <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Mobile (from Step 1)</label>
+          <div className="mt-1 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <span className="text-sm font-mono text-on-surface">+91 {mobile}</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Name for Credit Score API</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => { setName(e.target.value); setError(""); }}
+            placeholder="Enter full name as per credit bureau"
+            className="mt-1 w-full px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20 text-sm text-on-surface placeholder:text-secondary focus:outline-none focus:border-primary transition-colors"
+          />
+          {error && <p className="text-xs text-error mt-1">{error}</p>}
+        </div>
+
+        <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+          <p className="text-xs text-blue-700 font-medium">
+            The API will match this name + mobile with Equifax bureau records.
+            If no match is found, you&apos;ll see &quot;No credit history&quot;.
+          </p>
+        </div>
+      </div>
+
+      <button
+        onClick={handleProceed}
+        disabled={saving}
+        className="w-full h-[52px] bg-primary text-on-primary rounded-full flex items-center justify-center gap-2 font-bold text-[15px] shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform disabled:opacity-50"
+      >
+        {saving ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Saving...</span>
+          </>
+        ) : (
+          <>
+            <span>Skip to Credit Score</span>
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ΓöÇΓöÇΓöÇ Step 8: Document Upload ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+function StepDocuments({ token, onNext, onBack }: { token: string; onNext: () => void; onBack: () => void }) {
+  const docTypes = [
+    { key: "AADHAAR", label: "Aadhaar Card", icon: "contact_page", required: true },
+    { key: "PAN", label: "PAN Card", icon: "credit_card", required: true },
+    { key: "PHOTO", label: "Passport Photo", icon: "face", required: true },
+    { key: "SIGNATURE", label: "Signature", icon: "draw", required: false },
+  ];
+  const [uploads, setUploads] = useState<Record<string, { url: string; name: string; progress: number }>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(false);
+
+  const handleFileUpload = async (type: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) { return; }
+    setUploading(prev => ({ ...prev, [type]: true }));
+    setUploads(prev => ({ ...prev, [type]: { url: "", name: file.name, progress: 0 } }));
+    const interval = setInterval(() => {
+      setUploads(prev => ({ ...prev, [type]: { ...prev[type], progress: Math.min((prev[type]?.progress || 0) + 15, 90) } }));
+    }, 150);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+      const res = await fetch("/api/kyc/upload", { method: "POST", headers: {"Authorization": `Bearer ${token}`}, body: formData });
+      const data = await res.json();
+      clearInterval(interval);
+      if (res.ok) {
+        const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+        setUploads(prev => ({ ...prev, [type]: { url: previewUrl || data.document.fileUrl, name: file.name, progress: 100 } }));
+      }
+    } catch { clearInterval(interval); }
+    setUploading(prev => ({ ...prev, [type]: false }));
+  };
+
+  const requiredDone = docTypes.filter(d => d.required).every(d => uploads[d.key]?.progress === 100);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    await fetch("/api/kyc/save-step", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","Authorization":`Bearer ${token}`},
+      body: JSON.stringify({ step: 7 }),
+    });
+    setLoading(false);
+    onNext();
+  };
+
+  return (
+    <div className="space-y-5 animate-slide-up" onKeyDown={(e) => { if (e.key === "Enter" && !loading && requiredDone) handleSubmit(); }}>
+      <div>
+        <BackButton onBack={onBack} />
+        <h2 className="text-lg font-bold text-on-background">Upload Documents</h2>
+        <p className="text-sm text-secondary mt-1">Upload clear copies of your documents</p>
+      </div>
+      <div className="space-y-4">
+        {docTypes.map((doc) => {
+          const up = uploads[doc.key];
+          const isUploading = uploading[doc.key];
+          const isDone = up?.progress === 100;
+          return (
+            <div key={doc.key} className="card">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="material-symbols-outlined text-primary text-[22px]" style={FILLED}>{doc.icon}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-on-surface">{doc.label}</p>
+                  <p className="text-xs text-on-surface-variant">{doc.required ? "Required" : "Optional"}</p>
+                </div>
+                {isDone && <span className="material-symbols-outlined text-green-600 text-[24px]" style={FILLED}>check_circle</span>}
+              </div>
+              {isDone && up ? (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                  {up.url && up.url.startsWith("blob:") ? (
+                    <img src={up.url} alt={doc.label} className="w-10 h-10 rounded-lg object-cover border border-border-input" />
+                  ) : (
+                    <span className="material-symbols-outlined text-green-600 text-[32px]" style={FILLED}>{doc.icon}</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-green-700 truncate">{up.name}</p>
+                    <p className="text-[11px] text-green-600">Uploaded successfully</p>
+                  </div>
+                  <label className="cursor-pointer text-xs text-primary font-semibold hover:opacity-70">
+                    Change
+                    <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => e.target.files?.[0] && handleFileUpload(doc.key, e.target.files[0])} />
+                  </label>
+                </div>
+              ) : (
+                <label className="upload-zone cursor-pointer block">
+                  <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => e.target.files?.[0] && handleFileUpload(doc.key, e.target.files[0])} />
+                  {isUploading ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-on-surface-variant">Uploading {up?.name}...</p>
+                      <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-primary rounded-full transition-all duration-300" style={{ width: `${up?.progress || 0}%` }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-primary text-[28px]">upload_file</span>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-on-surface">Click to upload</p>
+                        <p className="text-xs text-on-surface-variant">JPG, PNG, PDF ΓÇö max 5MB</p>
+                      </div>
+                    </div>
+                  )}
+                </label>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <SubmitButton loading={loading} onClick={handleSubmit} disabled={loading || !requiredDone} icon="send">
+        Submit KYC Application
+      </SubmitButton>
+    </div>
+  );
+}
+
+// ΓöÇΓöÇΓöÇ Step 8: KYC Complete ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+function StepComplete() {
+  return (
+    <div className="space-y-6 animate-slide-up py-4">
+      <div className="flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mb-4">
+          <span className="material-symbols-outlined text-on-primary text-[40px]" style={FILLED}>check_circle</span>
+        </div>
+        <h2 className="text-xl font-bold text-on-background mb-2">Verification Successful</h2>
+        <p className="text-sm text-secondary max-w-sm mx-auto">
+          Your identity has been verified. You now have full access to all banking features and higher transaction limits.
+        </p>
+      </div>
+      {/* User Profile */}
+      <div className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/20">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+          <span className="material-symbols-outlined text-primary text-[32px]" style={FILLED}>person</span>
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-on-surface">Johnathan Doe</p>
+          <p className="text-xs text-on-surface-variant">Verified Account Holder</p>
+        </div>
+        <GovBadge />
+      </div>
+      {/* Verified Documents */}
+      <div className="card">
+        <h3 className="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[18px]" style={FILLED}>verified</span>
+          Verified Documents
+        </h3>
+        <div className="space-y-3">
+          {[
+            { icon: "contact_page", label: "National ID Card", sub: "Aadhaar Verification" },
+            { icon: "credit_card", label: "PAN Card", sub: "Income Tax Department" },
+            { icon: "face", label: "Biometric Face Scan", sub: "Liveness Check Passed" },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/20">
+              <span className="material-symbols-outlined text-primary text-[20px]" style={FILLED}>{item.icon}</span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-on-surface">{item.label}</p>
+                <p className="text-[11px] text-on-surface-variant">{item.sub}</p>
+              </div>
+              <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-bold rounded-full flex items-center gap-1">
+                <span className="material-symbols-outlined text-[10px]" style={FILLED}>check</span>VERIFIED
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 mt-4 p-3 bg-primary/5 rounded-xl">
+          <span className="material-symbols-outlined text-primary text-[16px]" style={FILLED}>lock</span>
+          <p className="text-xs text-on-surface-variant">All data is stored with bank-grade AES-256 encryption.</p>
+        </div>
+      </div>
+      <Link href="/" className="btn-primary">
+        Go to Dashboard<span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+      </Link>
+      <button className="btn-ghost w-full text-sm">Download Verification Receipt (PDF)</button>
+      <Footer />
+    </div>
+  );
+}
+
+// ΓöÇΓöÇΓöÇ Main Wizard Page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+export default function RegisterPage() {
+  const [step, setStep] = useState<Step>(1);
+  const [mobile, setMobile] = useState("");
+  const [token, setToken] = useState("");
+  const [aadhaarData, setAadhaarData] = useState<AadhaarData | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const [panData, setPanData] = useState<PanData | null>(null);
+  const [matchScore, setMatchScore] = useState(0);
+  const [showMatch, setShowMatch] = useState(false);
+  const [dobMatch, setDobMatch] = useState(true);
+  const [toastOtp, setToastOtp] = useState<string | null>(null);
+  const [testMode, setTestMode] = useState(false);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("kyc_token");
+    if (savedToken) {
+      setToken(savedToken);
+    }
+  }, []);
+
+  const stepContent = () => {
+    if (step === 1) return <StepMobile onNext={(mob) => { setMobile(mob); setStep(2); }} onShowOtp={(otp) => setToastOtp(otp)} />;
+    if (step === 2) return <StepOTP mobile={mobile} onBack={() => setStep(1)} onNext={() => { const freshToken = localStorage.getItem("kyc_token"); if (freshToken) setToken(freshToken); setStep(testMode ? "test-bypass" : 3); }} onShowOtp={(otp) => setToastOtp(otp)} />;
+    if (step === "test-bypass") {
+      return (
+        <StepTestBypass
+          mobile={mobile}
+          token={token}
+          onBack={() => setStep(2)}
+          onNext={(name) => {
+            setAadhaarData({ name, dob: "", gender: "", address: "", maskedAadhaar: "", photo: "" });
+            setPanData({ panNumber: "", name, dob: "", status: "TEST", panType: "INDIVIDUAL" });
+            setStep(7);
+          }}
+        />
+      );
+    }
+    if (step === 3) return <StepEmail token={token} onBack={() => setStep(2)} onNext={() => setStep(4)} />;
+    if (step === 4) return <StepConsent token={token} onBack={() => setStep(3)} onNext={() => setStep(5)} />;
+    if (step === 5) {
+      if (showReview && aadhaarData) return <StepReviewAadhaar aadhaarData={aadhaarData} token={token} onBack={() => setShowReview(false)} onNext={() => { setStep(6); setShowReview(false); }} />;
+      return <StepAadhaar token={token} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
+    }
+    if (step === 6) {
+      if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
+      return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
+    }
+    if (step === 7) return <StepCibilScore token={token} onBack={() => setStep(testMode ? "test-bypass" : 6)} onNext={() => setStep(8)} />;
+    if (step === 8) return <StepDocuments token={token} onBack={() => setStep(7)} onNext={() => setStep("complete")} />;
+    return <StepComplete />;
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-surface lg:flex-row">
+      {toastOtp && <Toast message={toastOtp} onClose={() => setToastOtp(null)} />}
+      <StepHero step={step} />
+      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0">
+        <TopNav />
+        {step !== "complete" && <ProgressBar step={step} />}
+        <main className="flex-1 flex flex-col items-center justify-start px-5 py-6 lg:py-8">
+          <div className="w-full max-w-md mx-auto">
+            {stepContent()}
+          </div>
+        </main>
+        {/* Test Mode Toggle */}
+        {step !== "complete" && step !== "test-bypass" && (
+          <div className="w-full max-w-md mx-auto px-5 pb-4">
+            <button
+              onClick={() => setTestMode(!testMode)}
+              className={`w-full py-2 px-4 rounded-lg text-xs font-semibold transition-all ${
+                testMode
+                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                  : "bg-surface-container-low text-secondary border border-outline-variant/20 hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px] align-middle mr-1">
+                {testMode ? "science" : "science"}
+              </span>
+              {testMode ? "Test Mode ON ΓÇö Skip DigiLocker" : "Enable Test Mode (skip DigiLocker)"}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

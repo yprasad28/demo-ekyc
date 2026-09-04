@@ -11,7 +11,7 @@ function CallbackContent() {
   const [message, setMessage] = useState("Processing your DigiLocker authentication...");
 
   useEffect(() => {
-    const txnId = searchParams.get("decstro_txn_id") || searchParams.get("txn_id");
+    const txnId = searchParams.get("decentro_transaction_id") || searchParams.get("decstro_txn_id") || searchParams.get("txn_id");
     const code = searchParams.get("code");
 
     if (!txnId && !code) {

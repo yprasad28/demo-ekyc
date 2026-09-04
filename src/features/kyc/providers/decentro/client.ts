@@ -34,6 +34,8 @@ export async function decentroRequest(
 
   const json = await response.json();
 
+  console.log(`[Decentro] ${path} → ${response.status}`, JSON.stringify(json, null, 2));
+
   if (!response.ok) {
     const errorMsg = json.error?.message || json.message || "Unknown error";
     throw new Error(

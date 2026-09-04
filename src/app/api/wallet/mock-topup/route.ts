@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdminAuth } from "@/lib/auth";
 import { PLATFORM_OWNER_ID } from "@/lib/constants";

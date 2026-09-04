@@ -11,24 +11,29 @@ function generateRefId(): string {
 
 export class DecentroDigiLockerProvider implements DigiLockerProvider {
   async initiateSession(): Promise<DigiLockerSessionResult> {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
     const result = await decentroRequest(
       "/v2/kyc/sso/digilocker/session",
       {
         consent: true,
         purpose: "KYC verification for account opening",
         reference_id: generateRefId(),
-        redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/kyc/aadhaar/callback`,
+        redirect_url: `${appUrl}/kyc/aadhaar/callback`,
       }
     );
 
     const txnId = result.decentroTxnId || (result.result?.decentroTxnId as string) || "";
+
     const authUrl =
       (result.result?.authorizationUrl as string) ||
       (result.data?.authorizationUrl as string) ||
       "";
 
+    console.log("[DigiLocker] txnId:", txnId, "authUrl:", authUrl ? authUrl.substring(0, 80) + "..." : "EMPTY");
+
     if (!authUrl) {
-      throw new Error("No authorization URL received from Decentro");
+      throw new Error("No authorization URL received from Decentro. Response: " + JSON.stringify(result));
     }
 
     return {
