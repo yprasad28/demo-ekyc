@@ -27,6 +27,7 @@ function ensureInit(): Promise<void> {
         const pool = new Pool({
           connectionString: databaseUrl,
           connectionTimeoutMillis: 10000,
+          preparedStatements: false,
         });
         const adapter = new PrismaPg(pool);
         prisma = new PrismaClient({ adapter });
