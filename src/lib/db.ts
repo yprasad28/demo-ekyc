@@ -27,7 +27,6 @@ function ensureInit(): Promise<void> {
         const pool = new Pool({
           connectionString: databaseUrl,
           connectionTimeoutMillis: 10000,
-          preparedStatements: false,
         });
         const adapter = new PrismaPg(pool);
         prisma = new PrismaClient({ adapter });
@@ -326,14 +325,13 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.deductWalletBalance(walletId, amount);
     try {
-      // Atomic conditional update — prevents overspend
-      const [updated] = await prisma.$queryRaw`
-        UPDATE wallets
-        SET balance = balance - ${amount}, "updatedAt" = NOW()
-        WHERE id = ${walletId} AND balance >= ${amount}
-        RETURNING *
-      `;
-      return updated || null;
+      const wallet = await prisma.wallet.findUnique({ where: { id: walletId } });
+      if (!wallet || wallet.balance < amount) return null;
+      const updated = await prisma.wallet.update({
+        where: { id: walletId, balance: { gte: amount } },
+        data: { balance: { decrement: amount }, updatedAt: new Date() },
+      });
+      return updated;
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.deductWalletBalance(walletId, amount);
@@ -359,13 +357,13 @@ export const db = {
     if (useFallback) return mockDb.useFreeCredit(customerId, type);
     try {
       const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
-      const [updated] = await prisma.$queryRaw`
-        UPDATE wallets
-        SET ${field} = ${field} - 1, "updatedAt" = NOW()
-        WHERE "customerId" = ${customerId} AND ${field} > 0
-        RETURNING *
-      `;
-      return !!updated;
+      const wallet = await prisma.wallet.findFirst({ where: { customerId } });
+      if (!wallet || wallet[field] <= 0) return false;
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { [field]: wallet[field] - 1, updatedAt: new Date() },
+      });
+      return true;
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.useFreeCredit(customerId, type);
@@ -377,11 +375,12 @@ export const db = {
     if (useFallback) return mockDb.restoreFreeCredit(customerId, type);
     try {
       const field = type === 'PAN' ? 'freePan' : type === 'CREDIT_SCORE' ? 'freeCreditScore' : 'freeAadhaar';
-      await prisma.$queryRaw`
-        UPDATE wallets
-        SET ${field} = ${field} + 1, "updatedAt" = NOW()
-        WHERE "customerId" = ${customerId}
-      `;
+      const wallet = await prisma.wallet.findFirst({ where: { customerId } });
+      if (!wallet) return;
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { [field]: wallet[field] + 1, updatedAt: new Date() },
+      });
     } catch (e) {
       console.error("Prisma error, falling back to mockDb:", e);
       return mockDb.restoreFreeCredit(customerId, type);
