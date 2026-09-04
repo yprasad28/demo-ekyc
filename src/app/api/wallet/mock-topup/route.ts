@@ -3,8 +3,6 @@ import { db } from "@/lib/db";
 import { requireAdminAuth } from "@/lib/auth";
 import { PLATFORM_OWNER_ID } from "@/lib/constants";
 
-const MOCK_AMOUNTS = [50000, 100000, 500000, 1000000]; // 500, 1000, 5000, 10000 in paise
-
 /**
  * POST /api/wallet/mock-topup
  *
