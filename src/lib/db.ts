@@ -87,6 +87,8 @@ export const db = {
     try {
       const mobileHash = hashForLookup(mobile);
       const mobileEncrypted = encrypt(mobile);
+      const existing = await prisma.customer.findUnique({ where: { mobileHash } });
+      if (existing) return existing;
       return await prisma.customer.create({
         data: { mobile: mobileEncrypted, mobileHash }
       });
@@ -153,6 +155,8 @@ export const db = {
     await ensureInit();
     if (useFallback) return mockDb.createApplication(customerId);
     try {
+      const existing = await prisma.kycApplication.findFirst({ where: { customerId } });
+      if (existing) return existing;
       return await prisma.kycApplication.create({
         data: { customerId }
       });
