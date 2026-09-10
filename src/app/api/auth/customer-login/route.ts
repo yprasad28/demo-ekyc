@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const userAgent = getUserAgent(req);
 
     await db.createConsentLog(customer.id, "MOBILE_REGISTER_CONSENT", true, ip, userAgent);
-    await db.createAuditLog(customer.id, "OTP_SENT", `OTP sent successfully to mobile ${mobile}`, ip);
+    await db.createAuditLog(customer.id, "OTP_SENT", `OTP sent successfully`, ip);
 
     return NextResponse.json({
       success: true,

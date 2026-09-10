@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdminAuth, getClientIp } from "@/lib/auth";
 import { AdminApplicationActionSchema } from "@/lib/validators";
+import { TOTAL_STEPS } from "@/lib/constants";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -22,6 +23,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const application = await db.findApplicationById(id);
     if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
+
+    // VULN-04 FIX: Validate KYC prerequisites before approval
+    if (action === "APPROVE") {
+      const missing: string[] = [];
+      if (!application.aadhaarNumber) missing.push("Aadhaar verification");
+      if (!application.panNumber) missing.push("PAN verification");
+      if (!application.panName) missing.push("PAN name");
+      if (!application.creditScore) missing.push("Credit score");
+      if ((application.currentStep || 0) < TOTAL_STEPS) missing.push("All KYC steps completed");
+
+      if (missing.length > 0) {
+        return NextResponse.json({
+          error: "Cannot approve: mandatory verifications incomplete.",
+          missing,
+        }, { status: 422 });
+      }
+    }
 
     const updates: Record<string, unknown> = {
       status: action === "APPROVE" ? "APPROVED" : "REJECTED",

@@ -52,7 +52,7 @@ export function requireAdminAuth(req: NextRequest): NextResponse | AdminPayload 
 export function setAuthCookie(response: NextResponse, cookieName: string, token: string, maxAge: number): void {
   response.cookies.set(cookieName, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
     maxAge,
   });

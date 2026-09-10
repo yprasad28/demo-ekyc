@@ -69,9 +69,9 @@ export async function POST(req: NextRequest) {
       // ─── Check for simulation data match (real API mode) ──────────────────
       const simProfile = findSimulationProfile(name, mobile);
       if (simProfile) {
-        console.log(`[credit-score] 🎯 MATCH → calling REAL API with: name="${simProfile.name}" mobile="${simProfile.mobile}"`);
+        console.log(`[credit-score] Simulation profile matched, calling real API`);
       } else {
-        console.log(`[credit-score] 🚀 NO MATCH → calling REAL API with: name="${name}" mobile="${mobile}"`);
+        console.log(`[credit-score] No simulation match, calling real API`);
       }
     }
 

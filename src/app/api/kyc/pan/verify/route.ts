@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { fuzzyNameMatch } from "@/lib/mock-pan";
-import { NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY } from "@/lib/constants";
+import { NAME_MATCH_GOOD_THRESHOLD, DOB_MISMATCH_PENALTY, maskPan } from "@/lib/constants";
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
 import { PanVerifySchema } from "@/lib/validators";
 import { createPanProvider } from "@/features/kyc/providers/factory";
@@ -68,6 +68,17 @@ export async function POST(req: NextRequest) {
       nameMatchWarning = matchScore < NAME_MATCH_GOOD_THRESHOLD || !dobMatch;
     }
 
+    // VULN-02 FIX: Enforce threshold server-side — reject if match too low
+    if (matchScore < NAME_MATCH_GOOD_THRESHOLD || !dobMatch) {
+      await refundForVerification(customerId, "PAN", deductionUsedFreeCredit);
+      return NextResponse.json({
+        error: "PAN–Aadhaar name match below required threshold. Identity verification failed.",
+        code: "NAME_MATCH_FAILED",
+        matchScore,
+        dobMatch,
+      }, { status: 422 });
+    }
+
     await db.updateApplication(application.id, {
       panNumber: panData.panNumber,
       panName: panData.name,
@@ -79,14 +90,15 @@ export async function POST(req: NextRequest) {
     });
 
     const ipAddress = getClientIp(req);
-    await db.createAuditLog(customerId, "PAN_VERIFIED", `PAN ${panData.panNumber} verified, match score: ${matchScore}%`, ipAddress);
+    await db.createAuditLog(customerId, "PAN_VERIFIED", `PAN verified, match score: ${matchScore}%`, ipAddress);
 
     return NextResponse.json({
       success: true,
       panData: {
-        panNumber: panData.panNumber,
+        panNumber: maskPan(panData.panNumber),
         name: panData.name,
         dob: panData.dob,
+        gender: "",
         status: panData.status,
         panType: panData.panType,
       },

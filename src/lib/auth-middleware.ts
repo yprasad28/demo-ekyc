@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "./constants";
+import { JWT_SECRET, ADMIN_JWT_SECRET } from "./constants";
 
 export interface CustomerPayload {
   customerId: string;
@@ -31,7 +31,7 @@ export function verifyAdminToken(req: NextRequest): AdminPayload | null {
   const token = req.cookies.get("admin_token")?.value || req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   try {
-    const payload = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as AdminPayload;
+    const payload = jwt.verify(token, ADMIN_JWT_SECRET, { algorithms: ["HS256"] }) as AdminPayload;
     if (payload.role !== "ADMIN") return null;
     return payload;
   } catch {

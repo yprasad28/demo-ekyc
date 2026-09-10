@@ -3,15 +3,19 @@ import { db } from "@/lib/db";
 import { requireCustomerAuth, getClientIp, getUserAgent } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limiter";
 import { DecentroDigiLockerProvider } from "@/features/kyc/providers/decentro/aadhaar";
-import { deductForVerification } from "@/lib/wallet-deduction";
+import { deductForVerification, refundForVerification } from "@/lib/wallet-deduction";
 
 const provider = new DecentroDigiLockerProvider();
 
 export async function POST(req: NextRequest) {
+  let deductionUsedFreeCredit = false;
+  let deductionSuccess = false;
+  let customerId = "";
+
   try {
     const auth = requireCustomerAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
+    customerId = auth.customerId;
 
     const limiter = rateLimit(`digilocker-session:${customerId}`, 3, 10 * 60 * 1000);
     if (!limiter.allowed) {
@@ -23,6 +27,8 @@ export async function POST(req: NextRequest) {
 
     // Wallet deduction: charge before initiating DigiLocker session
     const deduction = await deductForVerification(customerId, "AADHAAR");
+    deductionUsedFreeCredit = deduction.usedFreeCredit ?? false;
+    deductionSuccess = deduction.success;
     if (!deduction.success) {
       return NextResponse.json({ error: deduction.error }, { status: 402 });
     }
@@ -39,6 +45,10 @@ export async function POST(req: NextRequest) {
       authorizationUrl: session.authorizationUrl,
     });
   } catch (error) {
+    // VULN-05 FIX: Refund credit on DigiLocker session failure
+    if (deductionSuccess && customerId) {
+      await refundForVerification(customerId, "AADHAAR", deductionUsedFreeCredit);
+    }
     console.error("Error in DigiLocker session:", error);
     const msg = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json({ error: msg }, { status: 500 });

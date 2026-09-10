@@ -68,6 +68,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // VULN-06 FIX: Ownership validation — ensure order belongs to platform owner
+    if (order.customerId !== PLATFORM_OWNER_ID) {
+      console.error(`[wallet-verify] BOLA attempt: order belongs to ${order.customerId}, requested by ${PLATFORM_OWNER_ID}`);
+      return NextResponse.json(
+        { error: "Unauthorized to verify this order." },
+        { status: 403 }
+      );
+    }
+
     if (verification.amount !== order.amount) {
       console.error(`[wallet-verify] Amount mismatch: expected ${order.amount}, got ${verification.amount}`);
       return NextResponse.json(

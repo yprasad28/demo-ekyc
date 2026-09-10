@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const otp = generateOTP(`aadhaar-${customerId}`);
-    console.log(`[UIDAI MOCK] Aadhaar OTP [${otp}] sent for customer [${customerId}]`);
+    console.log(`[aadhaar-otp] OTP sent for customer`);
 
     const ipAddress = getClientIp(req);
     const userAgent = getUserAgent(req);

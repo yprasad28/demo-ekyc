@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getClientIp, setAuthCookie } from "@/lib/auth";
-import { ADMIN_TOKEN_MAX_AGE, ADMIN_TOKEN_EXPIRY } from "@/lib/constants";
+import { ADMIN_TOKEN_MAX_AGE, ADMIN_TOKEN_EXPIRY, ADMIN_JWT_SECRET } from "@/lib/constants";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limiter";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign(
       { adminId: admin.id, email: admin.email, role: admin.role, name: admin.name },
-      process.env.JWT_SECRET || "securekyc-demo-secret-key-2024",
+      ADMIN_JWT_SECRET,
       { expiresIn: ADMIN_TOKEN_EXPIRY }
     );
 

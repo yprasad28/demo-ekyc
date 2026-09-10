@@ -126,3 +126,41 @@ export function verifyPanRecord(panNumber: string): PanRecord | null {
   const cleanNum = panNumber.toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
   return mockPanDb[cleanNum] || null;
 }
+
+function normalizeGenderForCompare(raw: string): string {
+  const upper = raw.toUpperCase();
+  if (upper === "F" || upper === "FEMALE" || upper === "WOMAN") return "F";
+  if (upper === "M" || upper === "MALE" || upper === "MAN") return "M";
+  return "";
+}
+
+export interface MatchResult {
+  nameScore: number;
+  dobMatch: boolean;
+  genderMatch: boolean;
+  overallScore: number;
+}
+
+export function comprehensiveMatch(
+  aadhaar: { name: string; dob: string; gender: string },
+  pan: { name: string; dob: string; gender?: string }
+): MatchResult {
+  const nameScore = fuzzyNameMatch(aadhaar.name, pan.name);
+
+  const dobMatch = aadhaar.dob !== "" && pan.dob !== "" && aadhaar.dob === pan.dob;
+
+  const normA = normalizeGenderForCompare(aadhaar.gender);
+  const normP = normalizeGenderForCompare(pan.gender || "");
+  const genderMatch = normA !== "" && normP !== "" && normA === normP;
+
+  let overallScore = nameScore * 0.6;
+  if (dobMatch) overallScore += 100 * 0.25;
+  if (genderMatch) overallScore += 100 * 0.15;
+
+  return {
+    nameScore,
+    dobMatch,
+    genderMatch,
+    overallScore: Math.round(overallScore),
+  };
+}

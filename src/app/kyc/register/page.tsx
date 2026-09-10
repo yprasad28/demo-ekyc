@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
 
 // ΓöÇΓöÇΓöÇ Types ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -12,7 +13,7 @@ interface AadhaarData {
 }
 interface PanData {
   panNumber: string; name: string; dob: string;
-  status: string; panType: string;
+  gender: string; status: string; panType: string;
 }
 
 // ΓöÇΓöÇΓöÇ Toast ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -959,7 +960,7 @@ function StepReviewAadhaar({ aadhaarData, token, onNext, onBack }: { aadhaarData
 }
 
 // ΓöÇΓöÇΓöÇ Step 6: PAN Verification (with tabs) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string; onNext: (data: PanData, score: number, dobMatch: boolean) => void; onBack: () => void }) {
+function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string; onNext: (data: PanData, score: number, dobMatch: boolean, genderMatch: boolean) => void; onBack: () => void }) {
   const [pan, setPan] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
@@ -967,6 +968,27 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
   const [needTopUp, setNeedTopUp] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [ocrRunning, setOcrRunning] = useState(false);
+  const [digilockerPan, setDigilockerPan] = useState<{panNumber: string; name: string; dob: string; status: string; matchScore: number} | null>(null);
+
+  // Check if PAN was already fetched from DigiLocker
+  useEffect(() => {
+    const stored = localStorage.getItem("digilocker_pan");
+    if (stored) {
+      try {
+        const panData = JSON.parse(stored);
+        setDigilockerPan(panData);
+        localStorage.removeItem("digilocker_pan");
+      } catch {}
+    }
+  }, []);
+
+  // If PAN from DigiLocker has a low match score, auto-fill PAN number and DOB for user to re-verify
+  useEffect(() => {
+    if (digilockerPan) {
+      setPan(digilockerPan.panNumber);
+      setDob(digilockerPan.dob);
+    }
+  }, [digilockerPan]);
 
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
   const panValid = panRegex.test(pan.toUpperCase());
@@ -1009,7 +1031,7 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
         }
         setLoading(false); return;
       }
-      onNext(data.panData, data.matchScore, data.dobMatch);
+      onNext(data.panData, data.matchScore, data.dobMatch, true);
     } catch { setError("Network error."); }
     setLoading(false);
   };
@@ -1021,6 +1043,15 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
         <h2 className="text-lg font-bold text-on-background">Verify your PAN details</h2>
         <p className="text-sm text-secondary mt-1">Please provide your Permanent Account Number and Date of Birth as per your PAN Card.</p>
       </div>
+      {digilockerPan && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+          <p className="font-semibold text-blue-800">PAN fetched from DigiLocker</p>
+          <p className="text-blue-700">PAN: {digilockerPan.panNumber} | Name: {digilockerPan.name}</p>
+          {digilockerPan.matchScore < 80 && (
+            <p className="text-amber-700 mt-1">Name match was {digilockerPan.matchScore}%. Please re-enter PAN details below to verify again.</p>
+          )}
+        </div>
+      )}
       {/* Upload Card */}
       <div className="space-y-4">
         <label className="upload-zone cursor-pointer block">
@@ -1080,9 +1111,10 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
 }
 
 // ΓöÇΓöÇΓöÇ Step 6b: Name Match ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack, dobMatch = true }: { panData: PanData; matchScore: number; aadhaarName: string; token: string; onNext: () => void; onBack: () => void; dobMatch?: boolean }) {
+function StepNameMatch({ panData, matchScore, aadhaarData, token, onNext, onBack, dobMatch = true, genderMatch = true }: { panData: PanData; matchScore: number; aadhaarData: AadhaarData | null; token: string; onNext: () => void; onBack: () => void; dobMatch?: boolean; genderMatch?: boolean }) {
   const [loading, setLoading] = useState(false);
   const isGoodMatch = matchScore >= 60;
+  const aadhaarName = aadhaarData?.name || "";
 
   const handleConfirm = async () => {
     if (!isGoodMatch) return;
@@ -1099,6 +1131,12 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
   return (
     <div className="space-y-5 animate-slide-up">
       <BackButton onBack={onBack} />
+      <div>
+        <h2 className="text-lg font-bold text-on-background">Name Verification</h2>
+        <p className="text-sm text-secondary mt-1">Comparing your Aadhaar and PAN details fetched from DigiLocker.</p>
+      </div>
+
+      {/* Match Score Circle */}
       <div className="flex flex-col items-center text-center">
         <div className="relative mb-4">
           <div className="w-28 h-28 rounded-full border-4 border-primary/20 flex items-center justify-center">
@@ -1110,25 +1148,94 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
             {isGoodMatch ? "HIGH CONFIDENCE MATCH" : "LOW MATCH"}
           </div>
         </div>
-        <h2 className="text-lg font-bold text-on-background">Match Score</h2>
-        <p className="text-xs text-on-surface-variant mt-1">NAME MATCHING RESULT</p>
       </div>
-      <div className="card space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl">
+
+      {/* Field-by-Field Match Indicators */}
+      <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-3 space-y-2">
+        <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Match Breakdown</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`material-symbols-outlined text-[16px] ${matchScore >= 60 ? "text-green-600" : "text-red-500"}`} style={FILLED}>{matchScore >= 60 ? "check_circle" : "cancel"}</span>
+            <span className="text-xs font-medium text-on-surface">Name</span>
+          </div>
+          <span className={`text-xs font-bold ${matchScore >= 60 ? "text-green-600" : "text-red-500"}`}>{matchScore}%</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`material-symbols-outlined text-[16px] ${dobMatch ? "text-green-600" : "text-red-500"}`} style={FILLED}>{dobMatch ? "check_circle" : "cancel"}</span>
+            <span className="text-xs font-medium text-on-surface">Date of Birth</span>
+          </div>
+          <span className={`text-xs font-bold ${dobMatch ? "text-green-600" : "text-red-500"}`}>{dobMatch ? "Match" : "Mismatch"}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`material-symbols-outlined text-[16px] ${genderMatch ? "text-green-600" : "text-red-500"}`} style={FILLED}>{genderMatch ? "check_circle" : "cancel"}</span>
+            <span className="text-xs font-medium text-on-surface">Gender</span>
+          </div>
+          <span className={`text-xs font-bold ${genderMatch ? "text-green-600" : "text-red-500"}`}>{genderMatch ? "Match" : "Mismatch"}</span>
+        </div>
+      </div>
+
+      {/* Aadhaar Details Card */}
+      <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+        <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-blue-600 text-[20px]">fingerprint</span>
-          <div className="flex-1">
-            <p className="text-[11px] font-semibold text-on-surface-variant uppercase">Aadhaar Name</p>
-            <p className="text-sm font-bold text-on-surface">{aadhaarName}</p>
+          <h3 className="text-sm font-bold text-blue-800">Aadhaar Details</h3>
+          <span className="ml-auto text-[10px] font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">DigiLocker</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[10px] font-semibold text-blue-600 uppercase">Name</p>
+            <p className="text-sm font-bold text-on-surface">{aadhaarData?.name || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-blue-600 uppercase">DOB</p>
+            <p className="text-sm font-bold text-on-surface">{aadhaarData?.dob || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-blue-600 uppercase">Gender</p>
+            <p className="text-sm font-bold text-on-surface">{aadhaarData?.gender || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-blue-600 uppercase">Aadhaar</p>
+            <p className="text-sm font-bold text-on-surface font-mono">{aadhaarData?.maskedAadhaar || "-"}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl">
+        {aadhaarData?.address && (
+          <div>
+            <p className="text-[10px] font-semibold text-blue-600 uppercase">Address</p>
+            <p className="text-xs text-on-surface">{aadhaarData.address}</p>
+          </div>
+        )}
+      </div>
+
+      {/* PAN Details Card */}
+      <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4 space-y-3">
+        <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-orange-600 text-[20px]">credit_card</span>
-          <div className="flex-1">
-            <p className="text-[11px] font-semibold text-on-surface-variant uppercase">PAN Name</p>
-            <p className="text-sm font-bold text-on-surface">{panData.name}</p>
+          <h3 className="text-sm font-bold text-orange-800">PAN Details</h3>
+          <span className="ml-auto text-[10px] font-semibold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">DigiLocker</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[10px] font-semibold text-orange-600 uppercase">Name</p>
+            <p className="text-sm font-bold text-on-surface">{panData.name || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-orange-600 uppercase">DOB</p>
+            <p className="text-sm font-bold text-on-surface">{panData.dob || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-orange-600 uppercase">PAN Number</p>
+            <p className="text-sm font-bold text-on-surface font-mono">{panData.panNumber || "-"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-orange-600 uppercase">Status</p>
+            <p className="text-sm font-bold text-on-surface">{panData.status || "-"}</p>
           </div>
         </div>
       </div>
+
       {!isGoodMatch && (
         <WarningBanner
           title="Name Mismatch Warning"
@@ -1139,7 +1246,7 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
       {!dobMatch && (
         <WarningBanner
           title="Date of Birth Mismatch"
-          message="The date of birth you entered does not match our records. Please verify and try again."
+          message="The date of birth on Aadhaar and PAN do not match. Please verify and try again."
           icon="error"
         />
       )}
@@ -1154,7 +1261,7 @@ function StepNameMatch({ panData, matchScore, aadhaarName, token, onNext, onBack
         </div>
       </div>
       <SubmitButton loading={loading} onClick={handleConfirm} disabled={loading || !isGoodMatch} icon="arrow_forward">
-        Proceed to Next Step
+        Proceed to Credit Score
       </SubmitButton>
       <p className="text-xs text-center text-on-surface-variant">By clicking proceed, you agree to finalize your identity data.</p>
     </div>
@@ -1674,7 +1781,7 @@ function StepDocuments({ token, onNext, onBack }: { token: string; onNext: () =>
 }
 
 // ΓöÇΓöÇΓöÇ Step 8: KYC Complete ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-function StepComplete() {
+function StepComplete({ userName }: { userName?: string }) {
   return (
     <div className="space-y-6 animate-slide-up py-4">
       <div className="flex flex-col items-center text-center">
@@ -1692,7 +1799,7 @@ function StepComplete() {
           <span className="material-symbols-outlined text-primary text-[32px]" style={FILLED}>person</span>
         </div>
         <div className="flex-1">
-          <p className="font-bold text-on-surface">Johnathan Doe</p>
+          <p className="font-bold text-on-surface">{userName || "Verified User"}</p>
           <p className="text-xs text-on-surface-variant">Verified Account Holder</p>
         </div>
         <GovBadge />
@@ -1746,6 +1853,7 @@ export default function RegisterPage() {
   const [matchScore, setMatchScore] = useState(0);
   const [showMatch, setShowMatch] = useState(false);
   const [dobMatch, setDobMatch] = useState(true);
+  const [genderMatch, setGenderMatch] = useState(true);
   const [toastOtp, setToastOtp] = useState<string | null>(null);
   const [testMode, setTestMode] = useState(false);
 
@@ -1753,6 +1861,52 @@ export default function RegisterPage() {
     const savedToken = localStorage.getItem("kyc_token");
     if (savedToken) {
       setToken(savedToken);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stepParam = params.get("step");
+    const showMatchParam = params.get("showMatch");
+    if (stepParam) {
+      const stepNum = parseInt(stepParam, 10);
+      if (stepNum >= 1 && stepNum <= 8) {
+        setStep(stepNum as Step);
+      }
+
+      // If showMatch=1 and we have digilocker data in localStorage, auto-load name match
+      if (showMatchParam === "1" && stepNum === 6) {
+        const storedPan = localStorage.getItem("digilocker_pan");
+        const storedAadhaar = localStorage.getItem("digilocker_aadhaar");
+        if (storedPan) {
+          try {
+            const panInfo = JSON.parse(storedPan);
+            setPanData({
+              panNumber: panInfo.panNumber,
+              name: panInfo.name,
+              dob: panInfo.dob,
+              gender: panInfo.gender || "",
+              status: panInfo.status,
+              panType: "DIGILOCKER",
+            });
+            setMatchScore(panInfo.matchScore || 0);
+            setDobMatch(panInfo.dobMatch !== false);
+            setGenderMatch(panInfo.genderMatch !== false);
+            if (storedAadhaar) {
+              const aadhaarInfo = JSON.parse(storedAadhaar);
+              setAadhaarData({
+                name: aadhaarInfo.name || "",
+                dob: aadhaarInfo.dob || "",
+                gender: aadhaarInfo.gender || "",
+                address: aadhaarInfo.address || "",
+                maskedAadhaar: aadhaarInfo.maskedAadhaar || "",
+                photo: aadhaarInfo.photo || "",
+              });
+            }
+            setShowMatch(true);
+          } catch {}
+        }
+      }
     }
   }, []);
 
@@ -1767,7 +1921,7 @@ export default function RegisterPage() {
           onBack={() => setStep(2)}
           onNext={(name) => {
             setAadhaarData({ name, dob: "", gender: "", address: "", maskedAadhaar: "", photo: "" });
-            setPanData({ panNumber: "", name, dob: "", status: "TEST", panType: "INDIVIDUAL" });
+            setPanData({ panNumber: "", name, dob: "", gender: "", status: "TEST", panType: "INDIVIDUAL" });
             setStep(7);
           }}
         />
@@ -1780,12 +1934,12 @@ export default function RegisterPage() {
       return <StepAadhaar token={token} onBack={() => setStep(4)} onNext={(data) => { setAadhaarData(data); setShowReview(true); }} onShowOtp={(otp) => setToastOtp(otp)} />;
     }
     if (step === 6) {
-      if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarName={aadhaarData?.name || ""} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} />;
+      if (showMatch && panData) return <StepNameMatch panData={panData} matchScore={matchScore} aadhaarData={aadhaarData} token={token} onBack={() => setShowMatch(false)} onNext={() => { setStep(7); setShowMatch(false); }} dobMatch={dobMatch} genderMatch={genderMatch} />;
       return <StepPAN token={token} aadhaarName={aadhaarData?.name || ""} onBack={() => setStep(5)} onNext={(data, score, dobOk) => { setPanData(data); setMatchScore(score); setDobMatch(dobOk); setShowMatch(true); }} />;
     }
     if (step === 7) return <StepCibilScore token={token} onBack={() => setStep(testMode ? "test-bypass" : 6)} onNext={() => setStep(8)} />;
     if (step === 8) return <StepDocuments token={token} onBack={() => setStep(7)} onNext={() => setStep("complete")} />;
-    return <StepComplete />;
+    return <StepComplete userName={aadhaarData?.name || panData?.name || ""} />;
   };
 
   return (

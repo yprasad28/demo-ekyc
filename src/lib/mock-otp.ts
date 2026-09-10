@@ -25,8 +25,8 @@ export function generateOTP(mobile: string): string {
     expiresAt
   };
   
-  // Log to console in dev mode
-  console.log(`[SMS MOCK ENGINE] Sent OTP [${otp}] to mobile [${mobile}]. Expiries at ${new Date(expiresAt).toLocaleTimeString()}`);
+  // Log to console in dev mode (redact PII)
+  console.log(`[SMS MOCK ENGINE] OTP sent. Expires at ${new Date(expiresAt).toLocaleTimeString()}`);
   
   return otp;
 }

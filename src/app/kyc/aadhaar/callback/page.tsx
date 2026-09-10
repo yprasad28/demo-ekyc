@@ -11,7 +11,7 @@ function CallbackContent() {
   const [message, setMessage] = useState("Processing your DigiLocker authentication...");
 
   useEffect(() => {
-    const txnId = searchParams.get("decentro_transaction_id") || searchParams.get("decstro_txn_id") || searchParams.get("txn_id");
+    const txnId = searchParams.get("initiation_decentro_transaction_id") || searchParams.get("decentro_transaction_id") || searchParams.get("decstro_txn_id") || searchParams.get("txn_id");
     const code = searchParams.get("code");
 
     if (!txnId && !code) {
@@ -50,9 +50,35 @@ function CallbackContent() {
         }
 
         setStatus("success");
-        setMessage("Aadhaar verified successfully via DigiLocker!");
+        const panInfo = data.panFromDigiLocker;
+        const panFetchErr = data.panFetchError;
+        const hasPan = !!panInfo;
+
+        if (panFetchErr) {
+          console.warn("[DigiLocker] PAN fetch error:", panFetchErr);
+        }
+
+        setMessage(hasPan
+          ? "Aadhaar & PAN fetched via DigiLocker!"
+          : (panFetchErr ? "Aadhaar verified! PAN not available in DigiLocker." : "Aadhaar verified successfully via DigiLocker!"));
+
+        // Store PAN from DigiLocker in localStorage
+        if (panInfo) {
+          localStorage.setItem("digilocker_pan", JSON.stringify(panInfo));
+        }
+        // Store full Aadhaar data for StepNameMatch rendering
+        if (data.aadhaarData) {
+          localStorage.setItem("digilocker_aadhaar", JSON.stringify(data.aadhaarData));
+        }
+
         setTimeout(() => {
-          router.push("/kyc/register");
+          if (hasPan) {
+            // PAN found → always show name match screen first
+            router.push("/kyc/register?step=6&showMatch=1");
+          } else {
+            // No PAN → manual PAN entry
+            router.push("/kyc/register?step=6");
+          }
         }, 2000);
       } catch {
         setStatus("error");
@@ -95,10 +121,10 @@ function CallbackContent() {
               <h1 className="text-lg font-bold text-on-background">Verification Failed</h1>
               <p className="text-sm text-secondary">{message}</p>
               <div className="flex gap-3">
-                <Link href="/kyc/register" className="btn-outline flex-1 text-center">
+                <Link href="/kyc/register?step=5" className="btn-outline flex-1 text-center">
                   Back to KYC
                 </Link>
-                <Link href="/kyc/register" className="btn-primary flex-1 text-center">
+                <Link href="/kyc/register?step=5" className="btn-primary flex-1 text-center">
                   Try Again
                 </Link>
               </div>

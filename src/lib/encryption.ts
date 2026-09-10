@@ -1,6 +1,10 @@
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "securekyc-32-byte-demo-key-12345";
+const _encryptionKey = process.env.ENCRYPTION_KEY;
+if (!_encryptionKey) {
+  throw new Error("ENCRYPTION_KEY environment variable is required");
+}
+const ENCRYPTION_KEY: string = _encryptionKey;
 
 function getKey(): Buffer {
   const key = Buffer.from(ENCRYPTION_KEY, "utf-8");

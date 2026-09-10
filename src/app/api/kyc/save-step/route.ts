@@ -29,7 +29,21 @@ export async function POST(req: NextRequest) {
     const application = await db.findApplicationByCustomerId(customerId);
     if (!application) return NextResponse.json({ error: "Application not found." }, { status: 404 });
 
-    const updates: Record<string, unknown> = { currentStep: step };
+    // VULN-03 FIX: Enforce sequential step progression
+    const currentStep = application.currentStep || 1;
+    // Steps 1-2 never call save-step; first real save is step 3.
+    // DigiLocker verify may jump currentStep to 6/7 directly.
+    const effectiveNextStep = Math.max(currentStep + 1, 3);
+    if (step > effectiveNextStep) {
+      return NextResponse.json({
+        error: `Cannot skip steps. Expected step ${effectiveNextStep}, received ${step}.`,
+        code: "STEP_SEQUENCE_VIOLATION",
+        currentStep,
+      }, { status: 422 });
+    }
+
+    // Never let currentStep go backwards (DigiLocker may have advanced it past this step)
+    const updates: Record<string, unknown> = { currentStep: Math.max(step, currentStep) };
     if (data) {
       for (const key of ALLOWED_STEP_FIELDS) {
         if (key in data) {

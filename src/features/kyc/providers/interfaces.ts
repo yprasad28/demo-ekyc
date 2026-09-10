@@ -18,9 +18,18 @@ export interface DigiLockerSessionResult {
   authorizationUrl: string;
 }
 
+export interface DigiLockerPanProfile {
+  panNumber: string;
+  name: string;
+  dob: string;
+  gender: string;
+  status: string;
+}
+
 export interface DigiLockerProvider {
   initiateSession(aadhaarNumber?: string): Promise<DigiLockerSessionResult>;
   fetchEaadhaar(txnId: string): Promise<AadhaarProfile | null>;
+  fetchPanFromDigiLocker(txnId: string): Promise<DigiLockerPanProfile | null>;
 }
 
 export interface PanProfile {
