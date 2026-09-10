@@ -32,7 +32,15 @@ export async function decentroRequest(
     signal: AbortSignal.timeout(30000),
   });
 
-  const json = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  let json;
+  if (contentType.includes("application/json")) {
+    json = await response.json();
+  } else {
+    const text = await response.text();
+    console.error(`[Decentro] Non-JSON response (${response.status}):`, text.substring(0, 500));
+    throw new Error(`Decentro API returned non-JSON response (HTTP ${response.status}). Service may be unavailable or IP-restricted.`);
+  }
 
   console.log(`[Decentro] ${path} → ${response.status}`, JSON.stringify(json, null, 2));
 
