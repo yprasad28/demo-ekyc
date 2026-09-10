@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireCustomerAuth, getClientIp } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limiter";
 import { DecentroDigiLockerProvider } from "@/features/kyc/providers/decentro/aadhaar";
-import { fuzzyNameMatch, comprehensiveMatch } from "@/lib/mock-pan";
+import { comprehensiveMatch } from "@/lib/mock-pan";
 import { NAME_MATCH_GOOD_THRESHOLD, maskPan } from "@/lib/constants";
 import { z } from "zod";
 

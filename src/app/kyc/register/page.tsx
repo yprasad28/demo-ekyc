@@ -1,7 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { FILLED, SubmitButton, GovBadge, InfoBanner, WarningBanner } from "@/components/kyc/ui";
 
 // ΓöÇΓöÇΓöÇ Types ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -1114,7 +1113,6 @@ function StepPAN({ token, onNext, onBack }: { token: string; aadhaarName: string
 function StepNameMatch({ panData, matchScore, aadhaarData, token, onNext, onBack, dobMatch = true, genderMatch = true }: { panData: PanData; matchScore: number; aadhaarData: AadhaarData | null; token: string; onNext: () => void; onBack: () => void; dobMatch?: boolean; genderMatch?: boolean }) {
   const [loading, setLoading] = useState(false);
   const isGoodMatch = matchScore >= 60;
-  const aadhaarName = aadhaarData?.name || "";
 
   const handleConfirm = async () => {
     if (!isGoodMatch) return;
