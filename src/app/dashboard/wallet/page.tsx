@@ -116,6 +116,11 @@ export default function WalletPage() {
         name: "SecureKYC",
         description: `Wallet Top-up - ₹${amount / 100}`,
         order_id: data.orderId,
+        prefill: {
+          name: "Admin User",
+          email: "admin@securekyc.in",
+          contact: "9999999999",
+        },
         handler: async (response: Record<string, string>) => {
           try {
             const verifyRes = await fetch("/api/wallet/topup/verify", {
