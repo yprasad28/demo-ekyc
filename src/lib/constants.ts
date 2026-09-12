@@ -4,7 +4,11 @@ if (!_jwtSecret) {
   throw new Error("JWT_SECRET environment variable is required");
 }
 export const JWT_SECRET: string = _jwtSecret;
-export const ADMIN_JWT_SECRET: string = process.env.ADMIN_JWT_SECRET || _jwtSecret;
+const _adminJwtSecret = process.env.ADMIN_JWT_SECRET;
+if (!_adminJwtSecret) {
+  throw new Error("ADMIN_JWT_SECRET environment variable is required");
+}
+export const ADMIN_JWT_SECRET: string = _adminJwtSecret;
 export const CUSTOMER_TOKEN_MAX_AGE = 86400; // 24 hours in seconds
 export const ADMIN_TOKEN_MAX_AGE = 28800; // 8 hours in seconds
 export const CUSTOMER_TOKEN_EXPIRY = "24h";
