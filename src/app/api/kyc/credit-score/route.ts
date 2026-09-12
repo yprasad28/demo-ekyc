@@ -26,10 +26,14 @@ function findSimulationProfile(name: string, mobile: string) {
 }
 
 export async function POST(req: NextRequest) {
+  let deductionUsedFreeCredit = false;
+  let deductionSuccess = false;
+  let customerId = "";
+
   try {
     const auth = requireCustomerAuth(req);
     if (auth instanceof NextResponse) return auth;
-    const { customerId } = auth;
+    customerId = auth.customerId;
 
     // Get customer and application from DB
     const customer = await db.findCustomerById(customerId);
@@ -77,6 +81,8 @@ export async function POST(req: NextRequest) {
 
     // Wallet deduction: charge before calling external API
     const deduction = await deductForVerification(customerId, "CREDIT_SCORE");
+    deductionUsedFreeCredit = deduction.usedFreeCredit ?? false;
+    deductionSuccess = deduction.success;
     if (!deduction.success) {
       return NextResponse.json({ error: deduction.error }, { status: 402 });
     }
@@ -133,6 +139,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[credit-score] Unexpected error:", error);
+    if (deductionSuccess && customerId) {
+      await refundForVerification(customerId, "CREDIT_SCORE", deductionUsedFreeCredit);
+    }
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

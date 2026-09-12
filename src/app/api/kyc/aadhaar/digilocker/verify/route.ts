@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     await db.updateApplication(application.id, updateData);
 
     const ipAddress = getClientIp(req);
-    await db.createAuditLog(customerId, "AADHAAR_VERIFIED_DIGILOCKER", `Aadhaar verified via DigiLocker: ${maskedNumber}${panData ? `, PAN also fetched: ${panData.panNumber}` : ""}`, ipAddress);
+    await db.createAuditLog(customerId, "AADHAAR_VERIFIED_DIGILOCKER", `Aadhaar verified via DigiLocker: ${maskedNumber}${panData ? `, PAN also fetched: ${maskPan(panData.panNumber)}` : ""}`, ipAddress);
 
     return NextResponse.json({
       success: true,
