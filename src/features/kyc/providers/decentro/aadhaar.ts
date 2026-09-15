@@ -18,7 +18,8 @@ function normalizeGender(raw: string): string {
 
 export class DecentroDigiLockerProvider implements DigiLockerProvider {
   async initiateSession(): Promise<DigiLockerSessionResult> {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    console.log("[DigiLocker] Using appUrl:", appUrl);
 
     const result = await decentroRequest(
       "/v2/kyc/sso/digilocker/session",
