@@ -4,7 +4,7 @@ import type { AadhaarProvider } from "../interfaces";
 
 export class MockAadhaarProvider implements AadhaarProvider {
   async sendOtp(aadhaarNumber: string): Promise<{ success: boolean; message: string }> {
-    const otp = generateOTP(aadhaarNumber);
+    generateOTP(aadhaarNumber);
     console.log("[MOCK] Aadhaar OTP sent.");
     return {
       success: true,
